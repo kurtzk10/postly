@@ -66,7 +66,17 @@ The first commits were made after the week 1 work was finished, so each fix list
 
 ## Who wrote what
 
-*Fill this in yourself, in your own words. The rubric wants your own parts named with the file and commit, and one AI-written piece explained as clearly as if you'd written it.*
+### What I wrote
 
-- **Parts I wrote:** (file, commit, and what it does in my own words)
-- **An AI-written piece I can explain:** (e.g. how the upload sequence number in `client/src/pages/CapturePage.jsx` prevents the race condition)
+- **The idea and the design documents** (`FinalProjectProposal.pdf`, `WireframeAndComponents.pdf`, `DesignSystem.pdf`, commit `c0d363f`). Postly's concept, what it does, its screens, and where it's headed all came from me. I used AI to help me write these documents up.
+- **The rules for my AI assistant** (`CLAUDE.md`, commit `f0950b9`). I reworded the whole file myself, so the rules it follows are in my own words.
+- **My reflection** (`journal/week-1.md`). What I learned and my honest look back at the week are my own writing.
+- **Every decision about the project.** The AI built what I asked for, but the calls were mine. For example, I refused to use Docker. After testing the app myself, I asked for clickable gallery cards, camera capture and a reset command. I set up Cloudinary and tracked down the upload error from my browser console. And I chose to be open about how much AI I used.
+
+### What the AI wrote
+
+The application code in `server/` and `client/` was written by Claude Code under my direction, as logged in the table above.
+
+### An AI-written piece I can explain
+
+*(To be written.)*
