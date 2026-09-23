@@ -1,18 +1,18 @@
 # Instructions for the AI assistant
 
-I'm building Postly for my final project. These are my rules for any AI assistant working in this repo. Claude Code reads this file at the start of every session. Follow it over your own defaults, and ask me before breaking any rule here.
+I'm building Postly for my final project. These are my rules for my Claude Agent. Follow it over your own defaults, and ask me before breaking any rule here.
 
 ## What Postly is
 
 A private daily postcard journal: one photo a day, a template, a caption, saved to a gallery. The design is already decided in my own documents. Build from them, don't redesign:
 
-- `FinalProjectProposal.pdf`: what the app does, its routes, its data, and the main risk
-- `WireframeAndComponents.pdf`: every screen, desktop and phone, and the component tree
-- `DesignSystem.pdf`: colours, type, spacing, components, accessibility
-- `IMPLEMENTATION-PLAN.md`: what gets built in which week
-- `rubrics.md` and `documentation-guide.md`: how I'm graded. Check your work against them.
+- `FinalProjectProposal.pdf`: This file states the app's purpose, routes, data, and main risk or challenge
+- `WireframeAndComponents.pdf`: This file holds every screen for two viewports: desktop and phone, and the component tree
+- `DesignSystem.pdf`: This is where the design system is established. Colors, type, spacing, components and accessibility
+- `IMPLEMENTATION-PLAN.md`: Follow this to know what should be built each week
+- `rubrics.md` and `documentation-guide.md`: Check your work against this rubric.
 
-If something you're asked to do conflicts with these documents, tell me instead of quietly picking one.
+If something you're asked to do is not in these documents or contradicts it, tell me instead of deciding for yourself.
 
 ## Stack and commands
 
