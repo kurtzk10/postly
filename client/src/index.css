@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+/* Design tokens from the Postly design system ("Demure & Dreamy").
+   primary-strong is an addition: #7C8B99 only reaches 3.4:1 on the cream
+   background, so text links and filled buttons use the darker slate (6:1). */
+@theme {
+  --color-primary: #7c8b99;
+  --color-primary-strong: #56636f;
+  --color-accent: #d4a373;
+  --color-bg: #fdfbf7;
+  --color-surface: #f5f2eb;
+  --color-text: #3c403d;
+
+  --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-type: 'Courier Prime', ui-monospace, 'Courier New', monospace;
+
+  --text-heading: 1.5rem;
+  --text-heading--line-height: 1.3;
+  --text-heading--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.4;
+}
+
+@layer base {
+  html {
+    @apply bg-bg text-text font-sans text-body;
+  }
+
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-strong);
+    outline-offset: 2px;
+  }
+}
