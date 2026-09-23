@@ -24,3 +24,7 @@ Thumbs.db
 desktop.ini
 .idea/
 *.swp
+
+# Course templates (kept local)
+/journal-template.md
+/report-template.md
