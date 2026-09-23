@@ -6,23 +6,23 @@ The rules I set for the assistant are in [CLAUDE.md](CLAUDE.md), which it reads 
 
 Keep this current as you go. Every entry needs a commit.
 
-The first commits were made after the week 1 work was finished, so each fix listed below is included in the commit for its feature rather than in a commit of its own. The IDs become clickable links once the repo is on GitHub.
+The first commits were made after the week 1 work was finished, so each fix listed below is included in the commit for its feature rather than in a commit of its own.
 
 ## How I used AI
 
 | # | Tool | What I asked for | What I kept or changed | Commit |
 | --- | --- | --- | --- | --- |
-| 1 | Claude Code | Turn my proposal, wireframes, design system and the course rubrics into a week-by-week implementation plan, plus a `.gitignore` | Kept the plan. It picked PostgreSQL because my proposal never named a database. | `9456237` |
-| 2 | Claude Code | Scaffold the Express API: Postgres schema, seed data, a setup script that creates the database, and the postcards and templates routes | Kept. The schema enforces one postcard per day with `UNIQUE` on the date, which the API turns into a `409`. | `c325c8c` `de39fbd` `79c126a` |
-| 3 | Claude Code | Validation and error handling for every route | Kept. Tested every status code (200/201/204/400/404/409) with curl. | `79c126a` |
-| 4 | Claude Code | Scaffold the React client with the atomic folder structure from my wireframes doc, and Tailwind tokens from my design system | Kept, with one change to my design system (see "Where the AI got it wrong" / notes below) | `d038eb8` |
-| 5 | Claude Code | Build `/capture`: Cloudinary upload, template picker, caption with counter, live front/back preview, save | Kept. The upload uses a sequence number so a slow earlier upload can't overwrite a newer photo. That's the race condition I named as my risk in the proposal. | `9dcf9c2` `e528744` |
-| 6 | Claude Code | Build `/gallery` and the shared postcards context | Kept | `9dcf9c2` `fb02457` |
-| 7 | Claude Code | Check the layout in a headless browser at 375–1440px and take README screenshots | Found the phone overflow bug below | `bf80d35` |
-| 8 | Claude Code | Make gallery cards clickable at `/gallery/:id` | Kept. It's a page route that reads the existing `GET /api/postcards/:id`, so the API stays named after its resource. The detail view has flip, download, and delete with a confirm step. | `f3b6413` |
-| 9 | Claude Code | Take a photo straight from the camera, not just from the library | Kept. It uses a live `getUserMedia` viewfinder, with `capture="environment"` as a fallback. | `e18c9df` |
-| 10 | Claude Code | A command to reset today's postcard while testing | Kept: `npm run db:reset-today` | `43c2902` |
-| 11 | Claude Code | Fix `npm` failing in the project root ("Could not read package.json") | Kept. A root `package.json` where `npm install` installs both halves and `npm run dev` starts both together. | `4b525a3` |
+| 1 | Claude Code | Turn my proposal, wireframes, design system and the course rubrics into a week-by-week implementation plan, plus a `.gitignore` | Kept the plan. It picked PostgreSQL because my proposal never named a database. | [`1e14e95`](https://github.com/kurtzk10/postly/commit/1e14e95) |
+| 2 | Claude Code | Scaffold the Express API: Postgres schema, seed data, a setup script that creates the database, and the postcards and templates routes | Kept. The schema enforces one postcard per day with `UNIQUE` on the date, which the API turns into a `409`. | [`79c8f51`](https://github.com/kurtzk10/postly/commit/79c8f51) [`916f0c0`](https://github.com/kurtzk10/postly/commit/916f0c0) [`aa94632`](https://github.com/kurtzk10/postly/commit/aa94632) |
+| 3 | Claude Code | Validation and error handling for every route | Kept. Tested every status code (200/201/204/400/404/409) with curl. | [`aa94632`](https://github.com/kurtzk10/postly/commit/aa94632) |
+| 4 | Claude Code | Scaffold the React client with the atomic folder structure from my wireframes doc, and Tailwind tokens from my design system | Kept, with one change to my design system (see "Where the AI got it wrong" / notes below) | [`3c84cdb`](https://github.com/kurtzk10/postly/commit/3c84cdb) |
+| 5 | Claude Code | Build `/capture`: Cloudinary upload, template picker, caption with counter, live front/back preview, save | Kept. The upload uses a sequence number so a slow earlier upload can't overwrite a newer photo. That's the race condition I named as my risk in the proposal. | [`15191cc`](https://github.com/kurtzk10/postly/commit/15191cc) [`4255ea0`](https://github.com/kurtzk10/postly/commit/4255ea0) |
+| 6 | Claude Code | Build `/gallery` and the shared postcards context | Kept | [`15191cc`](https://github.com/kurtzk10/postly/commit/15191cc) [`8695eb3`](https://github.com/kurtzk10/postly/commit/8695eb3) |
+| 7 | Claude Code | Check the layout in a headless browser at 375–1440px and take README screenshots | Found the phone overflow bug below | [`1c35580`](https://github.com/kurtzk10/postly/commit/1c35580) |
+| 8 | Claude Code | Make gallery cards clickable at `/gallery/:id` | Kept. It's a page route that reads the existing `GET /api/postcards/:id`, so the API stays named after its resource. The detail view has flip, download, and delete with a confirm step. | [`29a1ed0`](https://github.com/kurtzk10/postly/commit/29a1ed0) |
+| 9 | Claude Code | Take a photo straight from the camera, not just from the library | Kept. It uses a live `getUserMedia` viewfinder, with `capture="environment"` as a fallback. | [`cc95959`](https://github.com/kurtzk10/postly/commit/cc95959) |
+| 10 | Claude Code | A command to reset today's postcard while testing | Kept: `npm run db:reset-today` | [`2be2753`](https://github.com/kurtzk10/postly/commit/2be2753) |
+| 11 | Claude Code | Fix `npm` failing in the project root ("Could not read package.json") | Kept. A root `package.json` where `npm install` installs both halves and `npm run dev` starts both together. | [`8534ecb`](https://github.com/kurtzk10/postly/commit/8534ecb) |
 
 **A note on my design system:** the AI checked the contrast ratios and found my design system's claim that "all pairs pass 4.5:1" was wrong. The slate primary `#7C8B99` is only 3.4:1 on the cream background, and white text on the gold accent is 2.3:1. We added a darker slate `#56636F` (6:1) for links and filled buttons, and used charcoal text on gold buttons (4.7:1).
 
@@ -32,31 +32,31 @@ The first commits were made after the week 1 work was finished, so each fix list
 - **Output:** the `/capture` layout used a CSS grid with a sideways-scrolling template row inside.
 - **Problem:** at 375px wide the whole page scrolled sideways by 113px. The AI's first fix (`min-w-0` on the grid columns) only brought it down to 105px.
 - **Fix:** the real cause was the `<fieldset>` around the templates. Browsers give fieldsets `min-inline-size: min-content`, so it grew to fit every template. Adding `min-w-0` to the fieldset fixed it. Verified at 375/639/641/1023/1025/1440px.
-- **Commit:** `e528744` (the fieldset fix is in `TemplatePicker.jsx`)
+- **Commit:** [`4255ea0`](https://github.com/kurtzk10/postly/commit/4255ea0) (the fieldset fix is in `TemplatePicker.jsx`)
 
 ### 2. A lint warning its first fix didn't clear
 - **Output:** the postcards context loaded data by calling an async `load()` function from `useEffect`.
 - **Problem:** oxlint flagged `set-state-in-effect`. The AI's first change (splitting out a `reload` function) still triggered it.
 - **Fix:** moved the fetch inline into the effect with a `cancelled` flag, and made `reload` bump a counter that re-runs the effect. This also stops a stale response from overwriting newer data.
-- **Commit:** `9dcf9c2` (`PostcardsContext.jsx`)
+- **Commit:** [`15191cc`](https://github.com/kurtzk10/postly/commit/15191cc) (`PostcardsContext.jsx`)
 
 ### 3. It tried to use Docker when I wanted a normal install
 - **Output:** PostgreSQL wasn't installed, so the AI started launching Docker Desktop to run Postgres in a container.
 - **Problem:** I didn't want Docker. It adds a dependency that anyone following my README would also need.
 - **Fix:** I stopped it and had it install PostgreSQL 17 directly with `winget`, and the README documents the native install.
-- **Commit:** `bf80d35` (the README documents the native install)
+- **Commit:** [`1c35580`](https://github.com/kurtzk10/postly/commit/1c35580) (the README documents the native install)
 
 ### 4. The camera shutter could capture an empty photo
 - **Output:** the camera marked itself "ready" as soon as the browser granted access.
 - **Problem:** a test with Chrome's fake webcam showed the video was still 0×0 at that moment, so pressing the shutter straight away produced no image and the upload never happened.
 - **Fix:** the shutter now only enables once the video's first frame has loaded (`onLoadedData`).
-- **Commit:** `e18c9df` (`CameraCapture.jsx`)
+- **Commit:** [`cc95959`](https://github.com/kurtzk10/postly/commit/cc95959) (`CameraCapture.jsx`)
 
 ### 5. A port-clash message that said the opposite of what happened
 - **Output:** a handler that printed a friendly message when port 4000 was already taken, using `server.on('error')`.
 - **Problem:** Express 5 changed `app.listen` to call its callback on errors too, so the server printed "listening on port 4000" and then "port already in use".
 - **Fix:** handle the error inside the `listen` callback (`app.listen(port, (err) => …)`), which is how Express 5 reports it.
-- **Commit:** `79c126a` (`server/src/index.js`)
+- **Commit:** [`aa94632`](https://github.com/kurtzk10/postly/commit/aa94632) (`server/src/index.js`)
 
 ### 6. It deleted my postcard without being asked
 - **Output:** while testing the new root scripts, the AI ran a command that included `npm run db:reset-today`.
@@ -68,8 +68,8 @@ The first commits were made after the week 1 work was finished, so each fix list
 
 ### What I wrote
 
-- **The idea and the design documents** (`FinalProjectProposal.pdf`, `WireframeAndComponents.pdf`, `DesignSystem.pdf`, commit `c0d363f`). Postly's concept, what it does, its screens, and where it's headed all came from me. I used AI to help me write these documents up.
-- **The rules for my AI assistant** (`CLAUDE.md`, commit `f0950b9`). I reworded the whole file myself, so the rules it follows are in my own words.
+- **The idea and the design documents** (`FinalProjectProposal.pdf`, `WireframeAndComponents.pdf`, `DesignSystem.pdf`, commit [`1f6e790`](https://github.com/kurtzk10/postly/commit/1f6e790)). Postly's concept, what it does, its screens, and where it's headed all came from me. I used AI to help me write these documents up.
+- **The rules for my AI assistant** (`CLAUDE.md`, commit [`f1d0e70`](https://github.com/kurtzk10/postly/commit/f1d0e70)). I reworded the whole file myself, so the rules it follows are in my own words.
 - **My reflection** (`journal/week-1.md`). What I learned and my honest look back at the week are my own writing.
 - **Every decision about the project.** The AI built what I asked for, but the calls were mine. For example, I refused to use Docker. After testing the app myself, I asked for clickable gallery cards, camera capture and a reset command. I set up Cloudinary and tracked down the upload error from my browser console. And I chose to be open about how much AI I used.
 
