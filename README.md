@@ -115,9 +115,18 @@ Click (or Tab to and press Enter on) any card to open it in a detail view over t
 - Close with ✕, the Esc key, or by clicking outside it.
 - A link to a postcard that doesn't exist (e.g. `/gallery/99999`) shows "Postcard not found" instead of a blank screen.
 
+### Streaks (`/streaks`)
+
+- **Three tiles:** your current streak, longest streak and total postcards. The current streak counts back from today, or from yesterday if today's postcard isn't made yet, so it doesn't reset every morning.
+- **The past year:** one square per day for the last 53 weeks. Filled squares are postcards, and today has a gold ring. Click a filled square to open that postcard. On a phone the year scrolls sideways inside its box.
+- **This month:** a calendar with a thumbnail on each day you made a postcard. Click one to open it.
+- **Journaling stats:** your best month, average postcards per week, days missed since your first postcard, and the date of your first postcard.
+
+Postcards open in the same detail view as the gallery, at `/streaks/:id`, and closing it brings you back to `/streaks`. If you delete a postcard from there, the streak updates straight away.
+
 ### Coming in week 2
 
-`/streaks` (streak calendar and stats) and `/capsule` (time capsule) are placeholder pages for now. See Known issues.
+`/capsule` (time capsule) is a placeholder page for now. See Known issues.
 
 ### API
 
@@ -132,6 +141,7 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | GET | `/api/postcards/:id` | One postcard | 200 · 400 if the id isn't a number · 404 |
 | POST | `/api/postcards` | Save today's postcard. Body: `{ "imageUrl", "caption", "templateId" }` | 201 · 400 invalid input · 409 today's already exists |
 | DELETE | `/api/postcards/:id` | Delete a postcard | 204 · 400 · 404 |
+| GET | `/api/stats` | Streak numbers: `{ currentStreak, longestStreak, totalPostcards, firstPostcardDate }` (`firstPostcardDate` is `null` with no postcards) | 200 |
 
 Rules the POST checks: `imageUrl` must be a Cloudinary image URL (`https://res.cloudinary.com/...`), `caption` is at most 140 characters (trimmed, optional), and `templateId` must be an existing template's id. Every query uses parameters (`$1`, `$2`), never string-built SQL.
 
@@ -188,6 +198,9 @@ Components follow atomic design: a level only imports from the levels below it.
 **Gallery**
 ![Gallery on desktop](docs/screenshots/gallery-desktop.png)
 
+**Streaks**
+![Streaks screen on desktop](docs/screenshots/streaks-desktop.png)
+
 **Postcard detail**
 ![Postcard detail view](docs/screenshots/detail-desktop.png)
 
@@ -196,7 +209,7 @@ Components follow atomic design: a level only imports from the levels below it.
 
 ## 7. Known issues and next steps
 
-- **Streaks and Capsule are placeholders.** Both are planned for week 2.
+- **Capsule is a placeholder.** It's planned for week 2.
 - **Download saves the photo, not the finished postcard.** Exporting the framed front and back as an image isn't built yet.
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
 - **No search, sort or month filter in the gallery yet.**
