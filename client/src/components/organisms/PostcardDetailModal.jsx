@@ -13,7 +13,7 @@ function downloadUrl(imageUrl) {
   return imageUrl.replace('/image/upload/', '/image/upload/fl_attachment/')
 }
 
-// Rendered by the /gallery/:id route, on top of the gallery grid. A native
+// Rendered by the /gallery/:id and /streaks/:id routes, over that page. A native
 // <dialog> gives us the focus trap, Esc key and backdrop for free.
 export default function PostcardDetailModal() {
   const { id } = useParams()
@@ -51,7 +51,8 @@ export default function PostcardDetailModal() {
   function close() {
     // Closing before navigating hands focus back to the card that opened it.
     dialogRef.current?.close()
-    navigate('/gallery')
+    // '..' is the page that opened the modal: /gallery or /streaks.
+    navigate('..')
   }
 
   async function handleDelete() {
@@ -104,7 +105,7 @@ export default function PostcardDetailModal() {
           <div role="alert" className="space-y-4">
             <p>{error}</p>
             <Button variant="ghost" onClick={close}>
-              Back to gallery
+              Close
             </Button>
           </div>
         )}
