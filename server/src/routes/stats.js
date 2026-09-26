@@ -20,20 +20,6 @@ import { calculateStreaks } from '../lib/streaks.js';
 
 export const statsRouter = Router();
 
-// =============================================================================
-// STEP 3: THE GET HANDLER
-// =============================================================================
-
-// 3a. Start the handler. The path is '/', because app.js mounts this whole
-//     router at /api/stats. async lets you use await inside:
-//       statsRouter.get('/', async (req, res) => {
-//   3b. Ask the database for every postcard date, oldest first:
-//         const datesResult = await pool.query(
-//           'SELECT postcard_date FROM postcards ORDER BY postcard_date ___'
-//         );
-//       (ASC means oldest first. No user input goes into this query, so it
-//        needs no $1 parameters.)
-
 statsRouter.get('/', async (req, res) => {
     const sql = `
     SELECT postcard_date
@@ -55,11 +41,3 @@ statsRouter.get('/', async (req, res) => {
         firstPostcardDate: dates[0] ?? null,
     });
 });
-
-// =============================================================================
-// STEP 4: CONNECT IT. Go to server/src/app.js and do the two TODO lines there.
-//
-// STEP 5: TEST IT, with `npm run dev` running:
-//   curl http://localhost:4000/api/stats
-// Work out the right answer by hand from your gallery first, then compare.
-// =============================================================================
