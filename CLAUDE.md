@@ -53,6 +53,11 @@ Run everything from the project root:
 - Accessibility is required: real `<label>`s for inputs, alt text on meaningful images (`alt=""` on decorative ones), visible focus, and everything usable by keyboard.
 - The Save button stays disabled while an upload is in flight. That's how I handle the race condition named in my proposal, so don't remove it.
 
+### Code I write myself
+- At least a fifth of this project has to be code I wrote. From week 2 on, **I write the remaining features myself**: the capsule API, gallery search, and the `/capsule` screen.
+- **Don't write or rewrite my code.** Your job there: hint comments showing where each line goes, answers to questions about a specific step, and testing and review. When you review, tell me what's wrong and why; don't fix it for me.
+- My files so far: `server/src/lib/streaks.js`, `server/src/routes/stats.js`, `server/src/routes/capsules.js`, `server/src/routes/flashback.js`, and the capsules table in `server/src/db/schema.sql`.
+
 ### Checking your work
 - **Don't tell me something works until you've run it.** Run lint and build, then load the page in a headless browser at **375, 639, 641, 1023, 1025 and 1440px** and check there's no sideways scroll.
 - If a test fails, say so and show the output. Don't paper over it.
