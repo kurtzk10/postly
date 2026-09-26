@@ -19,7 +19,9 @@ export default function App() {
             <Route path="gallery" element={<GalleryPage />}>
               <Route path=":id" element={<PostcardDetailModal />} />
             </Route>
-            <Route path="streaks" element={<StreaksPage />} />
+            <Route path="streaks" element={<StreaksPage />}>
+              <Route path=":id" element={<PostcardDetailModal />} />
+            </Route>
             <Route path="capsule" element={<CapsulePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
