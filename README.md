@@ -124,9 +124,11 @@ Click (or Tab to and press Enter on) any card to open it in a detail view over t
 
 Postcards open in the same detail view as the gallery, at `/streaks/:id`, and closing it brings you back to `/streaks`. If you delete a postcard from there, the streak updates straight away.
 
-### Coming in week 2
+### Time capsule (`/capsule`), in progress
 
-`/capsule` (time capsule) is a placeholder page for now. See Known issues.
+Seal one of your postcards with a message to future you, and pick the day it unlocks. Until then the capsule sits in **the vault** with a blurred photo and a countdown ("opens in 42 days"). From its unlock day it shows **Open now**.
+
+**Working now:** the vault lists your capsules, with locked ones blurred and counting down. **Still being built:** the seal form, opening a capsule to read its message, the flashback strip, and the phone layout. The API for all of it is finished; see the table below.
 
 ### API
 
@@ -142,8 +144,12 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | POST | `/api/postcards` | Save today's postcard. Body: `{ "imageUrl", "caption", "templateId" }` | 201 · 400 invalid input · 409 today's already exists |
 | DELETE | `/api/postcards/:id` | Delete a postcard | 204 · 400 · 404 |
 | GET | `/api/stats` | Streak numbers: `{ currentStreak, longestStreak, totalPostcards, firstPostcardDate }` (`firstPostcardDate` is `null` with no postcards) | 200 |
+| GET | `/api/capsules` | All capsules, soonest to unlock first. **A locked capsule's `message` is `null`**: the database only sends it from the unlock day on. | 200 |
+| POST | `/api/capsules` | Seal a capsule. Body: `{ "postcardId", "message", "unlockAt" }` | 201 · 400 (bad input, a date that isn't real or isn't in the future, or no such postcard) |
+| POST | `/api/capsules/:id/open` | Open an unlocked capsule. Records when it was first opened. | 200 · 400 · 403 still locked · 404 |
+| GET | `/api/flashback` | One past postcard: `{ "reason": "on-this-day" \| "random", "postcard": {...} }`. The one from exactly a year ago if there is one, otherwise a random older one. | 200 · 404 no older postcards |
 
-Rules the POST checks: `imageUrl` must be a Cloudinary image URL (`https://res.cloudinary.com/...`), `caption` is at most 140 characters (trimmed, optional), and `templateId` must be an existing template's id. Every query uses parameters (`$1`, `$2`), never string-built SQL.
+Rules `POST /api/postcards` checks: `imageUrl` must be a Cloudinary image URL (`https://res.cloudinary.com/...`), `caption` is at most 140 characters (trimmed, optional), and `templateId` must be an existing template's id. Every query uses parameters (`$1`, `$2`), never string-built SQL.
 
 Example:
 
@@ -164,8 +170,8 @@ postly/
 │   │   ├── index.js            starts the server (checks the DB connection first)
 │   │   ├── app.js              middleware and routes
 │   │   ├── config.js           reads and checks environment variables
-│   │   ├── routes/             postcards.js, templates.js
-│   │   ├── lib/                validate.js (input checks), httpError.js
+│   │   ├── routes/             postcards.js, templates.js, stats.js, capsules.js, flashback.js
+│   │   ├── lib/                streaks.js (streak counting), validate.js (input checks), httpError.js
 │   │   ├── middleware/         errors.js (404 + central error handler)
 │   │   └── db/                 schema.sql, seed.sql, setup.js, resetToday.js, pool.js
 │   └── .env.example
@@ -209,7 +215,7 @@ Components follow atomic design: a level only imports from the levels below it.
 
 ## 7. Known issues and next steps
 
-- **Capsule is a placeholder.** It's planned for week 2.
+- **The capsule screen is in progress.** The vault lists capsules, but sealing and opening them from the page aren't wired up yet. Both work through the API.
 - **Download saves the photo, not the finished postcard.** Exporting the framed front and back as an image isn't built yet.
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
 - **No search, sort or month filter in the gallery yet.**
