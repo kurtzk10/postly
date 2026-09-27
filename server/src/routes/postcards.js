@@ -6,7 +6,7 @@ import { parseId, validateNewPostcard } from '../lib/validate.js';
 export const postcardsRouter = Router();
 
 // Every read returns the same shape, with the template's slug and name joined in.
-const SELECT_POSTCARD = `
+export const SELECT_POSTCARD = `
   SELECT p.id,
          p.image_url     AS "imageUrl",
          p.caption,

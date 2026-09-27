@@ -5,6 +5,7 @@ import { postcardsRouter } from './routes/postcards.js';
 import { templatesRouter } from './routes/templates.js';
 import { statsRouter } from './routes/stats.js';
 import { capsulesRouter } from './routes/capsules.js';
+import { flashbackRouter } from './routes/flashback.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
 export const app = express();
@@ -17,6 +18,7 @@ app.use('/api/templates', templatesRouter);
 app.use('/api/postcards', postcardsRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/capsules', capsulesRouter);
+app.use('/api/flashback', flashbackRouter);
 
 app.use(notFound);
 app.use(errorHandler);
