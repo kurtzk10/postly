@@ -31,8 +31,10 @@ export function publicIdFromUrl(imageUrl) {
 
 // Deletes one image from Cloudinary. Resolves with Cloudinary's answer,
 // e.g. { result: 'ok' } or { result: 'not found' }; throws if it can't be reached.
+// invalidate also clears Cloudinary's CDN copies, otherwise a deleted photo
+// keeps loading at its old link until the cache expires.
 export async function destroyImage(publicId) {
-  const params = { public_id: publicId, timestamp: Math.round(Date.now() / 1000) };
+  const params = { invalidate: true, public_id: publicId, timestamp: Math.round(Date.now() / 1000) };
   const form = new FormData();
   for (const [key, value] of Object.entries(params)) form.append(key, value);
   form.append('api_key', config.cloudinary.apiKey);
