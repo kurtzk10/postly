@@ -6,7 +6,7 @@ Built with help from **Claude Code (Anthropic)**. See [AI-USAGE.md](AI-USAGE.md)
 
 ## 1. Overview
 
-Postly is a private daily postcard journal. Once a day you upload one photo, pick a postcard template, write a short caption, and save it. Your postcards build up into a gallery (and, from week 2, a streak calendar and a "future you" time capsule). It's for anyone who wants a daily photo-and-reflection habit without posting to social media.
+Postly is a private daily postcard journal. Once a day you upload one photo, pick a postcard template, write a short caption, and save it. Your postcards build up into a searchable gallery and a streak calendar, and you can seal one in a "future you" time capsule with a note to open on a later date. It's for anyone who wants a daily photo-and-reflection habit without posting to social media.
 
 Stack: React 19 + Vite + Tailwind CSS · Express 5 · PostgreSQL · Cloudinary (image hosting).
 
@@ -25,7 +25,7 @@ During the PostgreSQL install you set a password for the `postgres` user. You'll
 ### Get the code and install dependencies
 
 ```bash
-git clone <your-repo-url> postly
+git clone https://github.com/kurtzk10/postly.git
 cd postly
 npm install        # installs the root tools, then server/ and client/ automatically
 ```
@@ -34,7 +34,17 @@ Every command in this README runs from the project root (`postly/`).
 
 ### Environment variables
 
-Both folders have a `.env.example`. Copy each one to `.env` and fill in real values. `.env` files are git-ignored; never commit them.
+Both folders have a `.env.example`. Copy each one to `.env`, then open the two new files and fill in real values. `.env` files are git-ignored; never commit them.
+
+```bash
+# Windows (PowerShell)
+Copy-Item server/.env.example server/.env
+Copy-Item client/.env.example client/.env
+
+# macOS / Linux
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+```
 
 **`server/.env`**
 
@@ -50,7 +60,7 @@ Both folders have a `.env.example`. Copy each one to `.env` and fill in real val
 | --- | --- | --- |
 | `VITE_API_URL` | `http://localhost:4000` | Where the API is running |
 | `VITE_CLOUDINARY_CLOUD_NAME` | `your-cloud-name` | Shown on your Cloudinary dashboard |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | `postly_unsigned` | An **unsigned** upload preset |
+| `VITE_CLOUDINARY_UPLOAD_PRESET` | `your-unsigned-preset` | The name of an **unsigned** upload preset |
 
 To create the upload preset: Cloudinary console → Settings → Upload → Upload presets → Add upload preset → set *Signing mode* to **Unsigned** → save, then copy its name. Unsigned means the browser can upload without a secret key, so no Cloudinary secret is ever in this project.
 
@@ -105,6 +115,13 @@ You can only make one postcard per day. Once today's is saved, `/capture` shows 
 
 Every postcard, newest first, with its caption, date and template. 4 per row on desktop, 2 on tablets, 1 on small phones. If you have none yet, a link takes you back to `/capture`.
 
+The toolbar above the grid narrows it down. On a phone, tap **Filters** to show it.
+- **Search captions:** type part of a word; upper and lower case don't matter. Results update a moment after you stop typing.
+- **Sort:** newest or oldest first.
+- **Month:** only postcards from one month. The list only offers months you have postcards in.
+
+If nothing matches, the gallery says so, with a **Clear filters** button.
+
 ### Postcard detail (`/gallery/:id`)
 
 Click (or Tab to and press Enter on) any card to open it in a detail view over the gallery. The address changes to `/gallery/12`, so you can bookmark or share a single postcard. It's full screen on phones.
@@ -124,11 +141,14 @@ Click (or Tab to and press Enter on) any card to open it in a detail view over t
 
 Postcards open in the same detail view as the gallery, at `/streaks/:id`, and closing it brings you back to `/streaks`. If you delete a postcard from there, the streak updates straight away.
 
-### Time capsule (`/capsule`), in progress
+### Time capsule (`/capsule`)
 
-Seal one of your postcards with a message to future you, and pick the day it unlocks. Until then the capsule sits in **the vault** with a blurred photo and a countdown ("opens in 42 days"). From its unlock day it shows **Open now**.
+- **Seal a capsule:** pick one of your postcards, write a message to future you (up to 500 characters), and choose the day it unlocks (tomorrow at the earliest).
+- **The vault:** your capsules, soonest to unlock first. Locked ones show a blurred photo and a countdown ("opens in 42 days"). The message stays on the server until the unlock day, so it can't be peeked at.
+- **Open now** appears from the unlock day. It shows the message in a pop-up, and afterwards the button says **Read again**.
+- **Flashback:** a past postcard. It's the one from exactly a year ago if you have it, otherwise a random older one. **Shuffle** picks another.
 
-**Working now:** the vault lists your capsules, with locked ones blurred and counting down. **Still being built:** the seal form, opening a capsule to read its message, the flashback strip, and the phone layout. The API for all of it is finished; see the table below.
+On a phone the flashback comes first, then the vault, and the seal form is behind a **+ New capsule** button.
 
 ### API
 
@@ -138,7 +158,7 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | --- | --- | --- | --- |
 | GET | `/api/health` | Server is up | 200 |
 | GET | `/api/templates` | List the postcard templates | 200 |
-| GET | `/api/postcards` | List all postcards, newest first | 200 |
+| GET | `/api/postcards` | List postcards. Optional filters: `?q=` (search captions), `?month=YYYY-MM`, `?sort=newest\|oldest`. With none, all postcards, newest first. | 200 · 400 bad filter |
 | GET | `/api/postcards/today` | Today's postcard | 200, or 404 if not made yet |
 | GET | `/api/postcards/:id` | One postcard | 200 · 400 if the id isn't a number · 404 |
 | POST | `/api/postcards` | Save today's postcard. Body: `{ "imageUrl", "caption", "templateId" }` | 201 · 400 invalid input · 409 today's already exists |
@@ -181,10 +201,11 @@ postly/
 │   │   ├── layouts/            AppLayout (header + footer around every page)
 │   │   ├── components/
 │   │   │   ├── atoms/          Button, Badge, Spinner, Label, TextArea, AppNavLink, Logo, Stamp
-│   │   │   ├── molecules/      PostcardFront/Back, PostcardCard, TemplatePicker, UploadDropzone, CameraCapture, FormField…
-│   │   │   └── organisms/      Header, Footer, CaptureForm, PostcardPreview, GalleryGrid, PostcardDetailModal
+│   │   │   ├── molecules/      PostcardFront/Back, PostcardSheet, PostcardCard, GalleryToolbar, CapsuleRow, TemplatePicker, UploadDropzone, CameraCapture, FormField…
+│   │   │   └── organisms/      Header, Footer, CaptureForm, PostcardPreview, GalleryGrid, PostcardDetailModal, StreakHeatmap, MonthCalendar, CapsuleVault, SealCapsuleForm, CapsuleRevealModal, FlashbackStrip
 │   │   ├── context/            postcards list shared by every page
 │   │   ├── api/                client.js (calls the API), cloudinary.js (uploads)
+│   │   ├── lib/                dates, image helpers, journal stats, postcard download
 │   │   └── index.css           design tokens (colours, type scale)
 │   └── .env.example
 └── docs/screenshots/
@@ -204,8 +225,21 @@ Components follow atomic design: a level only imports from the levels below it.
 **Gallery**
 ![Gallery on desktop](docs/screenshots/gallery-desktop.png)
 
+**Gallery search**: "the" in October, 3 matches
+![Gallery filtered by a search and a month](docs/screenshots/gallery-search-desktop.png)
+
 **Streaks**
 ![Streaks screen on desktop](docs/screenshots/streaks-desktop.png)
+
+**Time capsule**: the seal form, the vault (one ready, two locked and blurred) and a flashback
+![Time capsule screen on desktop](docs/screenshots/capsule-desktop.png)
+
+**Opening a capsule**
+![A capsule's message opened in a pop-up](docs/screenshots/capsule-open-desktop.png)
+
+**Time capsule on a phone**: flashback first, the form behind "+ New capsule"
+
+<img src="docs/screenshots/capsule-phone.png" alt="Time capsule screen on a phone" width="300">
 
 **Postcard detail**
 ![Postcard detail view](docs/screenshots/detail-desktop.png)
@@ -221,12 +255,10 @@ Components follow atomic design: a level only imports from the levels below it.
 
 ## 7. Known issues and next steps
 
-- **The capsule screen is in progress.** The vault lists capsules, but sealing and opening them from the page aren't wired up yet. Both work through the API.
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
-- **No search, sort or month filter in the gallery yet.**
 - **"Today" is the database server's date.** Postgres decides which day it is using its own timezone setting. If the server and the user are in different timezones, a postcard made late at night can count for the wrong day. This is fine locally but needs fixing before any deployment.
 - **Re-running `db:setup` or `db:seed` deletes everything.** There are no migrations yet.
-- **No user accounts.** It's a single-user app by design for now.
+- **No login yet.** It's a single-user app that only runs on your own computer. It must not go online as it is: anyone who reached it could read or delete your postcards. A login is the next step, before any deployment.
 - **No automated tests yet.** The API has been checked by hand with curl for every status code in the table above.
 - **Deleting a postcard doesn't delete its image from Cloudinary.** Doing that needs a signed API call from the server.
 - Photos uploaded to Cloudinary before you click Save stay in your Cloudinary account even if you never save the postcard.
