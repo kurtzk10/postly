@@ -113,6 +113,12 @@ The first commits were made after the week 1 work was finished, so each fix list
 - **Fix:** with my go-ahead, it took `REPORT.md`, `REPORT-week-2.md` and `journal/` out of every commit with `git filter-repo`, after backing up the repo. The final files didn't change. Three commits that only touched those files disappeared, and every other commit got a new ID, so it updated every commit link in this file. It then force-pushed the new history. GitHub still showed the old commits to anyone who had their IDs, so I deleted the GitHub repo, created it again (private) and pushed the cleaned history. It then checked that the old IDs return "No commit found" and that every link in this file works.
 - **Commit:** the link-update commit is listed as entry 30 in the table above.
 
+### 12. It gave me an old commit ID for my report after the history was rewritten
+- **Output:** after the history cleanup (case 11), it gave me a list of this session's commits for my increment report. It warned that `09ff1ac` was an old ID, but also listed `8f656b9` for the README update as if it were current.
+- **Problem:** the cleanup gave every commit a new ID, and `8f656b9` had been made before it. That link would have led nowhere on GitHub. It caught the mistake itself when I asked it to look the IDs up.
+- **Fix:** it looked up each commit by its message in the current history and checked every ID on GitHub. `8f656b9` is now [`6a47e92`](https://github.com/kurtzk10/postly/commit/6a47e92) and `09ff1ac` is now [`06d8d99`](https://github.com/kurtzk10/postly/commit/06d8d99).
+- **Commit:** n/a (it was only in our chat; no file had the wrong ID)
+
 ## Who wrote what
 
 ### What I wrote
