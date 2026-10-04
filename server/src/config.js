@@ -16,7 +16,9 @@ export const config = {
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   // Signs the login cookie so it can't be forged. Long and random, never committed.
   sessionSecret: required('SESSION_SECRET'),
-  isProduction: process.env.NODE_ENV === 'production',
+  // Vercel sets VERCEL=1 on every deployment. (Don't set NODE_ENV=production on
+  // Vercel yourself: npm would then skip the dev packages the build needs.)
+  isProduction: process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL),
   // Optional: without them the app runs, but uploading new photos is off.
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
