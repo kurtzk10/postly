@@ -10,6 +10,8 @@ Postly is a private daily postcard journal. Once a day you upload one photo, pic
 
 Stack: React 19 + Vite + Tailwind CSS · Express 5 · PostgreSQL · Cloudinary (image hosting).
 
+**Live:** https://postly-lac-two.vercel.app (hosted on Vercel, database on Neon). Create an account to try it; each account only sees its own postcards.
+
 ## 2. Setup and installation
 
 ### Install first
@@ -124,6 +126,8 @@ Use `db:setup`, not `db:seed`: the deployed database gets no demo account.
 | `DATABASE_URL` | Neon's pooled connection string, with `sslmode=verify-full` |
 | `SESSION_SECRET` | a new long random string, different from your local one |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | from the Cloudinary console |
+| `CLIENT_ORIGIN` | the live address, e.g. `https://postly-lac-two.vercel.app`, so CORS only allows the app itself |
+
 Leave `VITE_API_URL` unset: the app and API share one address. **Don't set `NODE_ENV`** either: with `NODE_ENV=production`, `npm install` skips the dev packages the build needs (Vite's React plugin) and the build fails. The server switches to production mode (https-only login cookie) by itself when it sees Vercel's own `VERCEL=1`. Every push to `main` then redeploys.
 
 ## 4. Features and usage
@@ -271,7 +275,10 @@ Components follow atomic design: a level only imports from the levels below it.
 
 ## 6. Screenshots
 
-**Making today's postcard (desktop)**
+**Log in**
+![Log in page on desktop](docs/screenshots/login-desktop.png)
+
+**Making today's postcard (desktop)**, with your email and **Log out** in the header
 ![Capture screen on desktop](docs/screenshots/capture-desktop.png)
 
 **The same screen on a phone**, with the save button fixed to the bottom
@@ -281,13 +288,13 @@ Components follow atomic design: a level only imports from the levels below it.
 **Gallery**
 ![Gallery on desktop](docs/screenshots/gallery-desktop.png)
 
-**Gallery search**: "the" in October, 3 matches
+**Gallery search**: "the" in October, 4 matches
 ![Gallery filtered by a search and a month](docs/screenshots/gallery-search-desktop.png)
 
 **Streaks**
 ![Streaks screen on desktop](docs/screenshots/streaks-desktop.png)
 
-**Time capsule**: the seal form, the vault (one ready, two locked and blurred) and a flashback
+**Time capsule**: the seal form, the vault (one ready to open, one locked and blurred) and a flashback
 ![Time capsule screen on desktop](docs/screenshots/capsule-desktop.png)
 
 **Opening a capsule**
@@ -315,6 +322,7 @@ Components follow atomic design: a level only imports from the levels below it.
 - **Your timezone updates when you log in, not while you're logged in.** If you travel, log out and back in so "today" follows you.
 - **Re-running `db:setup` or `db:seed` deletes everything.** There are no migrations yet.
 - **No password reset or email check yet.** Sign-up doesn't confirm the email address, and a forgotten password can't be recovered.
-- **Not deployed yet.** Next: move the database to Neon and host the app on Vercel.
+- **The app connects to Neon as the database owner.** It works, but a separate role that can only read and write Postly's tables would be safer.
+- **A deleted photo can load for a few more seconds.** The photo is removed from Cloudinary straight away, but its CDN copies take a moment to clear.
 - **No automated tests yet.** The API has been checked by hand with curl for every status code in the table above.
 - **Photos uploaded but never saved stay in Cloudinary.** If you pick a photo and then leave without clicking Save, or pick a different one, the first upload isn't cleaned up. Fixing that would need a scheduled cleanup job.
