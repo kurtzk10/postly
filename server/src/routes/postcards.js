@@ -27,8 +27,57 @@ async function findPostcard(id) {
   return rows[0];
 }
 
+// =============================================================================
+// GET /api/postcards: the gallery list, with search, month filter and sort.
+// Written by: me (kurtzk10). Hints by the AI; the code is mine.
+// =============================================================================
+//
+// GET /api/postcards?q=tulip&month=2026-09&sort=oldest   (all three optional)
+//   q      text to find in captions, ignoring upper/lower case
+//   month  'YYYY-MM': only postcards from that month
+//   sort   'newest' (the default) or 'oldest'
+// With no filters it answers exactly as before: every postcard, newest first.
+// A bad value gets a 400.
+
 postcardsRouter.get('/', async (req, res) => {
-  const { rows } = await pool.query(`${SELECT_POSTCARD} ORDER BY p.postcard_date DESC`);
+  const { q = '', month = '', sort = 'newest' } = req.query;
+
+  if (typeof q !== 'string' || typeof month !== 'string') {
+    throw new HttpError(400, 'query and month must each be given once, as text')
+  }
+
+  if (q.length > 100) {
+    throw new HttpError(400, 'query must not exceed 100 characters')
+  }
+
+  if (month && !/^\d{4}-\d{2}$/.test(month)) {
+    throw new HttpError(400, 'month must look like 2026-09')
+  }
+
+  if (sort !== 'newest' && sort !== 'oldest') {
+    throw new HttpError(400, 'sort must be either oldest or newest')
+  }
+
+  const conditions = [];
+  const values = [];
+
+  if (q) {
+    values.push(`%${q}%`);
+    conditions.push(`p.caption ILIKE $${values.length}`);
+  }
+
+  if (month) {
+    values.push(month)
+    conditions.push(`to_char(p.postcard_date, 'YYYY-MM') = $${values.length}`);
+  }
+
+  const direction = sort === 'oldest' ? 'ASC' : 'DESC';
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const { rows } = await pool.query(
+    `${SELECT_POSTCARD} ${where} ORDER BY p.postcard_date ${direction}`,
+    values,
+  );
   res.json(rows);
 });
 
