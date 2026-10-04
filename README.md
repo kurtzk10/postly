@@ -213,6 +213,12 @@ Components follow atomic design: a level only imports from the levels below it.
 **After saving: today's postcard is done**
 ![Capture screen after today's postcard is saved](docs/screenshots/capture-done-desktop.png)
 
+## Credits
+
+- **Fonts:** [Courier Prime](https://fonts.google.com/specimen/Courier+Prime) and [Nunito Sans](https://fonts.google.com/specimen/Nunito+Sans), from Google Fonts, both under the SIL Open Font License.
+- **Sample photos** in the seed data and screenshots: Cloudinary's public demo images (`res.cloudinary.com/demo`), used only as placeholders.
+- **Logo, postage stamp and favicon:** drawn for this project as SVG.
+
 ## 7. Known issues and next steps
 
 - **The capsule screen is in progress.** The vault lists capsules, but sealing and opening them from the page aren't wired up yet. Both work through the API.
