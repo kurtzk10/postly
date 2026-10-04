@@ -65,7 +65,7 @@ function validateNewCapsule(body) {
 }
 
 capsulesRouter.get('/', async (req, res) => {
-    const { rows } = await pool.query(`${SELECT_CAPSULE} ORDER BY c.unlock_at ASC`);
+    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE p.user_id = $1 ORDER BY c.unlock_at ASC`, [req.userId]);
     res.json(rows);
 });
 
@@ -91,6 +91,13 @@ capsulesRouter.post('/', async (req, res) => {
 
     let newId;
     try {
+        const owned = await pool.query(
+            'SELECT 1 FROM postcards WHERE id = $1 AND user_id = $2', [postcardId, req.userId]
+        );
+
+        if (owned.rows.length === 0) {
+            throw new HttpError(400, `There is no postcard with id ${postcardId}`);
+        }
         const { rows } = await pool.query(
             `
         INSERT INTO capsules (postcard_id, message, unlock_at)
@@ -111,12 +118,12 @@ capsulesRouter.post('/', async (req, res) => {
     res.status(201).json(rows[0]);
 });
 
-capsulesRouter.post('/:id/open', async(req, res) => {
+capsulesRouter.post('/:id/open', async (req, res) => {
     const id = parseId(req.params.id);
-
     const found = await pool.query(
-        'SELECT unlock_at > CURRENT_DATE as "isLocked" FROM capsules WHERE id = $1',
-        [id],
+        `SELECT c.unlock_at > CURRENT_DATE AS "isLocked"
+         FROM capsules c JOIN postcards p ON p.id = c.postcard_id
+        WHERE c.id = $1 AND p.user_id = $2`, [id, req.userId]
     );
 
     if (found.rows.length === 0) {

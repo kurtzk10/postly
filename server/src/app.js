@@ -9,7 +9,7 @@ import { templatesRouter } from './routes/templates.js';
 import { statsRouter } from './routes/stats.js';
 import { capsulesRouter } from './routes/capsules.js';
 import { flashbackRouter } from './routes/flashback.js';
-// TODO (me): import authRouter from './routes/auth.js' here.
+import { authRouter } from './routes/auth.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
@@ -44,8 +44,7 @@ app.use(
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-// TODO (me): mount authRouter at '/api/auth' HERE, above requireAuth:
-// you can't be required to be logged in to sign up or log in.
+app.use('/api/auth', authRouter);
 
 // Everything below needs a logged-in user (401 otherwise).
 app.use('/api', requireAuth);

@@ -24,10 +24,10 @@ statsRouter.get('/', async (req, res) => {
     const sql = `
     SELECT postcard_date
     FROM postcards
+    WHERE user_id = $1
     ORDER BY postcard_date ASC;
     `;
-
-    const datesResult = await pool.query(sql);
+    const datesResult = await pool.query(sql, [req.userId]);
     const todayResult = await pool.query('SELECT CURRENT_DATE as today');
     const dates = datesResult.rows.map((row) => row.postcard_date);
     const today = todayResult.rows[0].today;

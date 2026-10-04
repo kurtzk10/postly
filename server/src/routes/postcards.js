@@ -59,9 +59,9 @@ postcardsRouter.get('/', async (req, res) => {
   if (sort !== 'newest' && sort !== 'oldest') {
     throw new HttpError(400, 'sort must be either oldest or newest')
   }
-
-  const conditions = [];
-  const values = [];
+  
+  const conditions = ['p.user_id = $1'];
+  const values = [req.userId];
 
   if (q) {
     values.push(`%${q}%`);
@@ -75,7 +75,7 @@ postcardsRouter.get('/', async (req, res) => {
 
   const direction = sort === 'oldest' ? 'ASC' : 'DESC';
 
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where = `WHERE ${conditions.join(' AND ')}`
   const { rows } = await pool.query(
     `${SELECT_POSTCARD} ${where} ORDER BY p.postcard_date ${direction}`,
     values,

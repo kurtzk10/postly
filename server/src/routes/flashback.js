@@ -22,12 +22,12 @@ import { SELECT_POSTCARD } from './postcards.js';
 export const flashbackRouter = Router();
 
 flashbackRouter.get('/', async (req, res) => {
-    const yearAgo = await pool.query(`${SELECT_POSTCARD} WHERE p.postcard_date = (CURRENT_DATE - INTERVAL '1 year')::date;`);
+    const yearAgo = await pool.query(`${SELECT_POSTCARD} WHERE p.user_id = $1 AND p.postcard_date = (CURRENT_DATE - INTERVAL '1 year')::date;`, [req.userId]);
     if (yearAgo.rows.length !== 0) {
         return res.json({ "reason": "on-this-day", "postcard": yearAgo.rows[0] })
     }
 
-    const random = await pool.query(`${SELECT_POSTCARD} WHERE p.postcard_date < CURRENT_DATE ORDER BY random() LIMIT 1;`);
+    const random = await pool.query(`${SELECT_POSTCARD} WHERE p.user_id = $1 AND p.postcard_date < CURRENT_DATE ORDER BY random() LIMIT 1;`, [req.userId]);
     if (random.rows.length !== 0) {
         return res.json({ "reason": "random", "postcard": random.rows[0] });
     }
