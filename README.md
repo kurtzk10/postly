@@ -53,24 +53,28 @@ cp client/.env.example client/.env
 | `PORT` | `4000` | Port the API listens on |
 | `DATABASE_URL` | `postgres://postgres:your-password@localhost:5432/postly` | Postgres connection. The `postly` database is created for you by the setup script. |
 | `CLIENT_ORIGIN` | `http://localhost:5173` | The React dev server's address, allowed through CORS |
+| `SESSION_SECRET` | a long random string | Signs the login cookie. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `CLOUDINARY_CLOUD_NAME` | `your-cloud-name` | Shown on your Cloudinary dashboard |
+| `CLOUDINARY_API_KEY` | `your-api-key` | Cloudinary console → Settings → API Keys |
+| `CLOUDINARY_API_SECRET` | `your-api-secret` | Same page. **Server only**: it signs uploads and never goes to the browser |
 
 **`client/.env`**
 
 | Variable | Example | What it is |
 | --- | --- | --- |
-| `VITE_API_URL` | `http://localhost:4000` | Where the API is running |
-| `VITE_CLOUDINARY_CLOUD_NAME` | `your-cloud-name` | Shown on your Cloudinary dashboard |
-| `VITE_CLOUDINARY_UPLOAD_PRESET` | `your-unsigned-preset` | The name of an **unsigned** upload preset |
+| `VITE_API_URL` | *(leave empty)* | Only set this if the API runs on a different address. Empty means "same address as the app": in development Vite forwards every `/api/...` request to `http://localhost:4000`. |
 
-To create the upload preset: Cloudinary console → Settings → Upload → Upload presets → Add upload preset → set *Signing mode* to **Unsigned** → save, then copy its name. Unsigned means the browser can upload without a secret key, so no Cloudinary secret is ever in this project.
+**How photo uploads work:** the photo goes straight from the browser to Cloudinary, but only with a one-time signature from our server (`POST /api/uploads/signature`), which you only get when logged in. The signature fixes the folder (one per user) and the allowed file types, so nobody can upload to the Cloudinary account without an account here. No upload preset is needed.
 
 ### Set up and seed the database
 
 Make sure PostgreSQL is running, then:
 
 ```bash
-npm run db:seed    # creates the "postly" database, the tables, 3 templates and 9 sample postcards
+npm run db:seed    # creates the "postly" database, the tables, 3 templates, a demo account and its 9 sample postcards
 ```
+
+The demo account is **`demo@postly.app`** / **`postly-demo`**. Only use it locally; it is never created on a deployed server.
 
 `npm run db:setup` does the same without the sample postcards. **Both drop and recreate the tables**, so running either one again wipes your postcards.
 
@@ -89,7 +93,7 @@ This starts the API and the React app together in one terminal. Lines from each 
 [web]   ➜  Local:   http://localhost:5173/
 ```
 
-Open **http://localhost:5173**. You'll land on the **Today** screen with today's date and a "not made yet" badge. Check the API on its own at http://localhost:4000/api/health, which should return `{"ok":true}`.
+Open **http://localhost:5173**. You'll land on the **Log in** page: use the demo account above, or click **Create an account**. After logging in you're on the **Today** screen with today's date and a "not made yet" badge. Check the API on its own at http://localhost:4000/api/health, which should return `{"ok":true}`.
 
 If something goes wrong:
 - `Could not connect to the database`: check `DATABASE_URL` in `server/.env` and that the PostgreSQL service is running.
@@ -97,6 +101,17 @@ If something goes wrong:
 - `Could not read package.json`: you're in the wrong folder. Run commands from the project root.
 
 ## 4. Features and usage
+
+### Accounts (`/login`, `/signup`)
+
+Anyone can sign up with an email and a password (8 to 72 characters). Each account only ever sees its own postcards, streaks and capsules. You stay logged in for 30 days, or until you click **Log out** in the header. Any journal page you open while logged out sends you to **Log in** first, then back to where you were.
+
+How it's kept safe:
+- Passwords are stored only as bcrypt hashes.
+- The login lives in an `httpOnly` cookie (page scripts can't read it) that points to a row in the `session` table.
+- Log in and sign up allow 10 tries per 15 minutes, then answer 429.
+- A wrong email and a wrong password get the same message, so the login can't be used to find out who has an account.
+- Asking for another account's postcard or capsule gets a 404, the same as one that doesn't exist.
 
 ### Make today's postcard (`/capture`)
 
@@ -157,6 +172,11 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | Method | Path | What it does | Responses |
 | --- | --- | --- | --- |
 | GET | `/api/health` | Server is up | 200 |
+| POST | `/api/auth/signup` | Create an account and log in. Body: `{ "email", "password" }` | 201 · 400 invalid input · 409 email already used · 429 too many tries |
+| POST | `/api/auth/login` | Log in. Body: `{ "email", "password" }` | 200 · 400 · 401 wrong email or password · 429 |
+| POST | `/api/auth/logout` | Log out | 204 |
+| GET | `/api/auth/me` | Who is logged in: `{ "id", "email" }` | 200 · 401 |
+| POST | `/api/uploads/signature` | A signature for one photo upload to Cloudinary | 200 · 503 Cloudinary not set up on the server |
 | GET | `/api/templates` | List the postcard templates | 200 |
 | GET | `/api/postcards` | List postcards. Optional filters: `?q=` (search captions), `?month=YYYY-MM`, `?sort=newest\|oldest`. With none, all postcards, newest first. | 200 · 400 bad filter |
 | GET | `/api/postcards/today` | Today's postcard | 200, or 404 if not made yet |
@@ -169,12 +189,18 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | POST | `/api/capsules/:id/open` | Open an unlocked capsule. Records when it was first opened. | 200 · 400 · 403 still locked · 404 |
 | GET | `/api/flashback` | One past postcard: `{ "reason": "on-this-day" \| "random", "postcard": {...} }`. The one from exactly a year ago if there is one, otherwise a random older one. | 200 · 404 no older postcards |
 
+Every route below `/api/auth` needs you to be logged in and answers **401** otherwise. They only ever read or change the logged-in account's own rows.
+
 Rules `POST /api/postcards` checks: `imageUrl` must be a Cloudinary image URL (`https://res.cloudinary.com/...`), `caption` is at most 140 characters (trimmed, optional), and `templateId` must be an existing template's id. Every query uses parameters (`$1`, `$2`), never string-built SQL.
 
-Example:
+Example (`-c` saves the login cookie to a file, `-b` sends it back):
 
 ```bash
-curl -X POST http://localhost:4000/api/postcards \
+curl -c cookies.txt -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@postly.app","password":"postly-demo"}'
+
+curl -b cookies.txt -X POST http://localhost:4000/api/postcards \
   -H "Content-Type: application/json" \
   -d '{"imageUrl":"https://res.cloudinary.com/demo/image/upload/sample.jpg","caption":"Hello","templateId":1}'
 ```
@@ -190,21 +216,21 @@ postly/
 │   │   ├── index.js            starts the server (checks the DB connection first)
 │   │   ├── app.js              middleware and routes
 │   │   ├── config.js           reads and checks environment variables
-│   │   ├── routes/             postcards.js, templates.js, stats.js, capsules.js, flashback.js
+│   │   ├── routes/             auth.js, postcards.js, templates.js, stats.js, capsules.js, flashback.js, uploads.js
 │   │   ├── lib/                streaks.js (streak counting), validate.js (input checks), httpError.js
-│   │   ├── middleware/         errors.js (404 + central error handler)
+│   │   ├── middleware/         auth.js (requireAuth), errors.js (404 + central error handler)
 │   │   └── db/                 schema.sql, seed.sql, setup.js, resetToday.js, pool.js
 │   └── .env.example
 ├── client/                     React app (Vite + Tailwind)
 │   ├── src/
-│   │   ├── pages/              CapturePage, GalleryPage, StreaksPage, CapsulePage
-│   │   ├── layouts/            AppLayout (header + footer around every page)
+│   │   ├── pages/              LoginPage, SignupPage, CapturePage, GalleryPage, StreaksPage, CapsulePage
+│   │   ├── layouts/            AppLayout (header + footer), RequireAuth (sends logged-out visitors to /login), AuthLayout (frame for the login pages)
 │   │   ├── components/
-│   │   │   ├── atoms/          Button, Badge, Spinner, Label, TextArea, AppNavLink, Logo, Stamp
+│   │   │   ├── atoms/          Button, Badge, Spinner, Label, Input, TextArea, AppNavLink, Logo, Stamp
 │   │   │   ├── molecules/      PostcardFront/Back, PostcardSheet, PostcardCard, GalleryToolbar, CapsuleRow, TemplatePicker, UploadDropzone, CameraCapture, FormField…
-│   │   │   └── organisms/      Header, Footer, CaptureForm, PostcardPreview, GalleryGrid, PostcardDetailModal, StreakHeatmap, MonthCalendar, CapsuleVault, SealCapsuleForm, CapsuleRevealModal, FlashbackStrip
-│   │   ├── context/            postcards list shared by every page
-│   │   ├── api/                client.js (calls the API), cloudinary.js (uploads)
+│   │   │   └── organisms/      Header, Footer, AuthForm, CaptureForm, PostcardPreview, GalleryGrid, PostcardDetailModal, StreakHeatmap, MonthCalendar, CapsuleVault, SealCapsuleForm, CapsuleRevealModal, FlashbackStrip
+│   │   ├── context/            who is logged in (AuthContext), postcards list shared by every page
+│   │   ├── api/                client.js (calls the API), cloudinary.js (signed uploads)
 │   │   ├── lib/                dates, image helpers, journal stats, postcard download
 │   │   └── index.css           design tokens (colours, type scale)
 │   └── .env.example
@@ -258,7 +284,8 @@ Components follow atomic design: a level only imports from the levels below it.
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
 - **"Today" is the database server's date.** Postgres decides which day it is using its own timezone setting. If the server and the user are in different timezones, a postcard made late at night can count for the wrong day. This is fine locally but needs fixing before any deployment.
 - **Re-running `db:setup` or `db:seed` deletes everything.** There are no migrations yet.
-- **No login yet.** It's a single-user app that only runs on your own computer. It must not go online as it is: anyone who reached it could read or delete your postcards. A login is the next step, before any deployment.
+- **No password reset or email check yet.** Sign-up doesn't confirm the email address, and a forgotten password can't be recovered.
+- **Not deployed yet.** Next: move the database to Neon and host the app on Vercel.
 - **No automated tests yet.** The API has been checked by hand with curl for every status code in the table above.
 - **Deleting a postcard doesn't delete its image from Cloudinary.** Doing that needs a signed API call from the server.
 - Photos uploaded to Cloudinary before you click Save stay in your Cloudinary account even if you never save the postcard.
