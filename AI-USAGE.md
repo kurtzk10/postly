@@ -97,6 +97,12 @@ The first commits were made after the week 1 work was finished, so each fix list
 - **Fix:** it read `schema.sql` before running anything, corrected itself, and afterwards confirmed the 3 templates exist on Neon.
 - **Commit:** n/a (nothing was changed)
 
+### 10. Its Vercel instructions broke the first build
+- **Output:** the AI told me to add `NODE_ENV=production` to Vercel's environment variables, so the login cookie would be https-only. The first deploy failed: `Cannot find package '@vitejs/plugin-react'`, then `Command "npm run build" exited with 1`.
+- **Problem:** when `NODE_ENV` is `production`, `npm install` skips development packages, and Vite's React plugin is one. Its local stand-in for Vercel set `NODE_ENV` only when running the app, not while installing, so the test never caught it.
+- **Fix:** I deleted `NODE_ENV` in Vercel. In `server/src/config.js` the server now also counts as production when Vercel's own `VERCEL=1` is set, so the cookie stays https-only. The AI wrote the line and I pasted it in. The README now says not to set `NODE_ENV`.
+- **Commit:** [`d4500ae`](https://github.com/kurtzk10/postly/commit/d4500ae)
+
 ## Who wrote what
 
 ### What I wrote

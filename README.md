@@ -124,9 +124,7 @@ Use `db:setup`, not `db:seed`: the deployed database gets no demo account.
 | `DATABASE_URL` | Neon's pooled connection string, with `sslmode=verify-full` |
 | `SESSION_SECRET` | a new long random string, different from your local one |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | from the Cloudinary console |
-| `NODE_ENV` | `production` (makes the login cookie https-only) |
-
-Leave `VITE_API_URL` unset: the app and API share one address. Every push to `main` then redeploys.
+Leave `VITE_API_URL` unset: the app and API share one address. **Don't set `NODE_ENV`** either: with `NODE_ENV=production`, `npm install` skips the dev packages the build needs (Vite's React plugin) and the build fails. The server switches to production mode (https-only login cookie) by itself when it sees Vercel's own `VERCEL=1`. Every push to `main` then redeploys.
 
 ## 4. Features and usage
 
