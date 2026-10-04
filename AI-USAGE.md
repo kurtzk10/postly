@@ -110,7 +110,7 @@ The first commits were made after the week 1 work was finished, so each fix list
 ### 11. Its fix for case 7 left my journals in the git history
 - **Output:** when the AI removed my reports and journals from Postly (case 7), it deleted the files in a new commit and called it done.
 - **Problem:** deleting a file doesn't remove it from git's history. Once the repo was public, anyone could have opened an older commit and read my week 1 and week 2 journals and reports. It only noticed in a final check before I made the repo public.
-- **Fix:** with my go-ahead, it took `REPORT.md`, `REPORT-week-2.md` and `journal/` out of every commit with `git filter-repo`, after backing up the repo. The final files didn't change. Three commits that only touched those files disappeared, and every other commit got a new ID, so it updated every commit link in this file. It then force-pushed the new history.
+- **Fix:** with my go-ahead, it took `REPORT.md`, `REPORT-week-2.md` and `journal/` out of every commit with `git filter-repo`, after backing up the repo. The final files didn't change. Three commits that only touched those files disappeared, and every other commit got a new ID, so it updated every commit link in this file. It then force-pushed the new history. GitHub still showed the old commits to anyone who had their IDs, so I deleted the GitHub repo, created it again (private) and pushed the cleaned history. It then checked that the old IDs return "No commit found" and that every link in this file works.
 - **Commit:** the link-update commit is listed as entry 30 in the table above.
 
 ## Who wrote what
