@@ -17,4 +17,10 @@ export const config = {
   // Signs the login cookie so it can't be forged. Long and random, never committed.
   sessionSecret: required('SESSION_SECRET'),
   isProduction: process.env.NODE_ENV === 'production',
+  // Optional: without them the app runs, but uploading new photos is off.
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+  },
 };

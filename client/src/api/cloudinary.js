@@ -1,23 +1,27 @@
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+import { api } from './client.js'
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
-export const cloudinaryConfigured = Boolean(CLOUD_NAME && UPLOAD_PRESET)
-
-// Uploads an image straight from the browser using an unsigned preset and
-// resolves with its https URL. No Cloudinary secret ever reaches the client.
+// Uploads an image straight from the browser to Cloudinary and resolves with
+// its https URL. First it asks OUR server for a signature (only logged-in
+// users get one). Cloudinary checks that signature, so nobody can upload to
+// this account without logging in, and the API secret never reaches the browser.
 export async function uploadImage(file) {
-  if (!cloudinaryConfigured) {
-    throw new Error('Image uploads are not configured. Set the Cloudinary values in client/.env.')
-  }
+  const { cloudName, apiKey, timestamp, signature, folder, allowed_formats } = await api('/uploads/signature', {
+    method: 'POST',
+  })
+
   const form = new FormData()
   form.append('file', file)
-  form.append('upload_preset', UPLOAD_PRESET)
+  form.append('api_key', apiKey)
+  form.append('timestamp', timestamp)
+  form.append('signature', signature)
+  form.append('folder', folder)
+  form.append('allowed_formats', allowed_formats)
 
   let res
   try {
-    res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: 'POST',
       body: form,
     })

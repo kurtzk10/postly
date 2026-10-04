@@ -9,6 +9,7 @@ import { templatesRouter } from './routes/templates.js';
 import { statsRouter } from './routes/stats.js';
 import { capsulesRouter } from './routes/capsules.js';
 import { flashbackRouter } from './routes/flashback.js';
+import { uploadsRouter } from './routes/uploads.js';
 import { authRouter } from './routes/auth.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errors.js';
@@ -53,6 +54,7 @@ app.use('/api/postcards', postcardsRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/capsules', capsulesRouter);
 app.use('/api/flashback', flashbackRouter);
+app.use('/api/uploads', uploadsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
