@@ -24,7 +24,7 @@ export default function CapsuleRow({ capsule, todayKey, onOpen }) {
     const countdown = daysLeft === 1 ? 'opens tomorrow' : `opens in ${daysLeft} days`;
 
     return (
-        <li className="flex items-center gap-4 rounded-xl bg-bg p-3">
+        <li className="flex items-center gap-4 rounded-xl bg-bg p-3 flex-wrap">
             <img
                 src={thumbnailUrl(capsule.imageUrl)}
                 alt=""
