@@ -7,11 +7,8 @@ import Button from '../atoms/Button.jsx'
 import Spinner from '../atoms/Spinner.jsx'
 import PostcardFront from '../molecules/PostcardFront.jsx'
 import PostcardBack from '../molecules/PostcardBack.jsx'
-
-// Asks Cloudinary to send the image as a file download instead of showing it.
-function downloadUrl(imageUrl) {
-  return imageUrl.replace('/image/upload/', '/image/upload/fl_attachment/')
-}
+import PostcardSheet from '../molecules/PostcardSheet.jsx'
+import { downloadAsPng } from '../../lib/downloadImage.js'
 
 // Rendered by the /gallery/:id and /streaks/:id routes, over that page. A native
 // <dialog> gives us the focus trap, Esc key and backdrop for free.
@@ -20,12 +17,15 @@ export default function PostcardDetailModal() {
   const navigate = useNavigate()
   const { postcards, removePostcard } = usePostcards()
   const dialogRef = useRef(null)
+  const sheetRef = useRef(null)
 
   const [fetched, setFetched] = useState({ id: null, postcard: null, error: null })
   const [face, setFace] = useState('front')
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState(null)
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -73,6 +73,18 @@ export default function PostcardDetailModal() {
   }
 
   const dateLabel = postcard ? formatPostcardDate(postcard.date) : ''
+
+  // Saves the front and back together as one PNG, from the off-screen sheet below.
+  async function handleDownload() {
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      await downloadAsPng(sheetRef.current, `postly-${postcard.date}.png`)
+    } catch {
+      setDownloadError("Couldn't create the image. Try again.")
+    }
+    setDownloading(false)
+  }
 
   return (
     <dialog
@@ -129,15 +141,23 @@ export default function PostcardDetailModal() {
               <Button variant="ghost" onClick={() => setFace(face === 'front' ? 'back' : 'front')}>
                 Flip
               </Button>
-              <a
-                href={downloadUrl(postcard.imageUrl)}
-                className="inline-flex items-center justify-center rounded-full border border-primary bg-bg px-5 py-2 font-semibold text-primary-strong transition hover:bg-surface"
-              >
-                Download
-              </a>
+              <Button variant="ghost" onClick={handleDownload} disabled={downloading}>
+                {downloading ? 'Saving…' : 'Download'}
+              </Button>
               <Button variant="ghost" onClick={() => setConfirming(true)} disabled={confirming}>
                 Delete
               </Button>
+            </div>
+
+            {downloadError && (
+              <p role="alert" className="text-small font-semibold text-red-800">
+                {downloadError}
+              </p>
+            )}
+
+            {/* What Download captures: front and back together, kept off-screen. */}
+            <div aria-hidden="true" className="pointer-events-none fixed top-0 left-[-10000px]">
+              <PostcardSheet ref={sheetRef} postcard={postcard} dateLabel={dateLabel} />
             </div>
 
             {confirming && (

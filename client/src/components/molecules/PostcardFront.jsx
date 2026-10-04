@@ -17,14 +17,23 @@ const FRAMES = {
   },
 }
 
-export default function PostcardFront({ imageUrl, templateSlug = 'classic', alt = '', compact = false }) {
+// eager: load the photo straight away, for the download sheet, which is
+// off-screen, where a lazy image would never load.
+export default function PostcardFront({ imageUrl, templateSlug = 'classic', alt = '', compact = false, eager = false }) {
   const frame = FRAMES[templateSlug] ?? FRAMES.classic
 
   return (
     <div className={`relative aspect-[3/2] w-full overflow-hidden rounded-md ${frame.outer}`}>
       <div className={`relative h-full w-full overflow-hidden bg-surface ${frame.photo}`}>
         {imageUrl ? (
-          <img src={imageUrl} alt={alt} className="h-full w-full object-cover" loading="lazy" />
+          // crossOrigin lets the download copy this photo's pixels. Cloudinary allows it.
+          <img
+            src={imageUrl}
+            alt={alt}
+            crossOrigin="anonymous"
+            className="h-full w-full object-cover"
+            loading={eager ? 'eager' : 'lazy'}
+          />
         ) : (
           <div className={`flex h-full items-center justify-center text-center text-primary-strong ${compact ? 'text-small' : ''}`}>
             {compact ? 'photo' : "Today's photo goes here"}

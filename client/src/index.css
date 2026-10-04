@@ -11,7 +11,7 @@
   --color-surface: #f5f2eb;
   --color-text: #3c403d;
 
-  --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Nunito Sans Variable', 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
   --font-type: 'Courier Prime', ui-monospace, 'Courier New', monospace;
 
   --text-heading: 1.5rem;
