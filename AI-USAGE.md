@@ -28,6 +28,7 @@ The first commits were made after the week 1 work was finished, so each fix list
 | 14 | Claude Code | Hint comments for the capsule API and flashback, which I'm writing myself | Comments only, no code, in `server/src/db/schema.sql` (the capsules table), `server/src/routes/capsules.js` and `server/src/routes/flashback.js`. It also added a rule to my `CLAUDE.md` that the remaining features are mine to write. The code under the hints is mine. | [`99538ed`](https://github.com/kurtzk10/postly/commit/99538ed) [`724c5b7`](https://github.com/kurtzk10/postly/commit/724c5b7) |
 | 15 | Claude Code | Hint comments for the `/capsule` screen, which I'm writing myself | Comments only in six files: `CapsuleRow`, `CapsuleVault`, `SealCapsuleForm`, `CapsuleRevealModal`, `FlashbackStrip` and `CapsulePage`, following the component list in my wireframe. `CapsulePage` keeps a small placeholder until my version replaces it, so the app keeps working. The code under the hints is mine. | [`3c113b4`](https://github.com/kurtzk10/postly/commit/3c113b4) |
 | 16 | Claude Code | Update the README for my capsule and flashback API | Added my four routes to the API table, a `/capsule` section saying honestly what works and what's still being built, my files to the project map, and an updated known issue. It checked the vault really renders before writing "working now". | [`985c7ca`](https://github.com/kurtzk10/postly/commit/985c7ca) |
+| 17 | Claude Code | Fill in the course security checklist | It checked every row against the real repo and database before answering: secrets and git history, every SQL query, Postgres network settings, CORS, error responses and dependencies. That gave honest **No** answers for the superuser database login (row 15) and the missing login (row 18). It also added a Credits section to the README for the fonts and sample photos (row 30). The checklist is in my workspace (`project/SECURITY-CHECKLIST.md`). | [`e15beb4`](https://github.com/kurtzk10/postly/commit/e15beb4) |
 
 **A note on my design system:** the AI checked the contrast ratios and found my design system's claim that "all pairs pass 4.5:1" was wrong. The slate primary `#7C8B99` is only 3.4:1 on the cream background, and white text on the gold accent is 2.3:1. We added a darker slate `#56636F` (6:1) for links and filled buttons, and used charcoal text on gold buttons (4.7:1).
 
@@ -69,13 +70,19 @@ The first commits were made after the week 1 work was finished, so each fix list
 - **Fix:** it spotted the mistake, told me, and restored the row with the same id, image, caption and template. Only the `createdAt` timestamp changed. Lesson: an AI running commands on your real database can do real damage. Check what it ran.
 - **Commit:** n/a (data, not code)
 
+### 7. It put my reports and journal in the public project repo
+- **Output:** the AI saved my weekly reports and journals in the Postly repo. It kept doing so even after we'd read the finals instructions, which say they belong in my private course workspace. It even created the week 2 versions there.
+- **Problem:** Postly is going public, and the journals are personal reflections. The course keeps personal material in the private workspace. The copies in Postly weren't graded, so they only added risk.
+- **Fix:** I had it check that the workspace copies contained everything, then remove the reports and journals from Postly. The report is now one file in my workspace that grows each week.
+- **Commit:** [`60a921b`](https://github.com/kurtzk10/postly/commit/60a921b)
+
 ## Who wrote what
 
 ### What I wrote
 
 - **The idea and the design documents** (`FinalProjectProposal.pdf`, `WireframeAndComponents.pdf`, `DesignSystem.pdf`, commit [`1f6e790`](https://github.com/kurtzk10/postly/commit/1f6e790)). Postly's concept, what it does, its screens, and where it's headed all came from me. I used AI to help me write these documents up.
 - **The rules for my AI assistant** (`CLAUDE.md`, commit [`f1d0e70`](https://github.com/kurtzk10/postly/commit/f1d0e70)). I reworded the whole file myself, so the rules it follows are in my own words.
-- **My reflection** (`journal/week-1.md`). What I learned and my honest look back at the week are my own writing.
+- **My reflection** (my weekly journals, kept in my private course workspace rather than this public repo). What I learned and my honest look back at each week are my own writing.
 - **Every decision about the project.** The AI built what I asked for, but the calls were mine. For example, I refused to use Docker. After testing the app myself, I asked for clickable gallery cards, camera capture and a reset command. I set up Cloudinary and tracked down the upload error from my browser console. And I chose to be open about how much AI I used.
 
 ### What the AI wrote
