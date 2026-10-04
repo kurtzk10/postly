@@ -110,7 +110,7 @@ Every postcard, newest first, with its caption, date and template. 4 per row on 
 Click (or Tab to and press Enter on) any card to open it in a detail view over the gallery. The address changes to `/gallery/12`, so you can bookmark or share a single postcard. It's full screen on phones.
 
 - **Flip** switches between the front and the back (caption, stamp and date).
-- **Download** saves the original photo.
+- **Download** saves the whole postcard, front above back, as one PNG image (`postly-YYYY-MM-DD.png`, 1500px wide).
 - **Delete** asks you to confirm first, then removes the postcard from the database and the gallery.
 - Close with ✕, the Esc key, or by clicking outside it.
 - A link to a postcard that doesn't exist (e.g. `/gallery/99999`) shows "Postcard not found" instead of a blank screen.
@@ -215,14 +215,13 @@ Components follow atomic design: a level only imports from the levels below it.
 
 ## Credits
 
-- **Fonts:** [Courier Prime](https://fonts.google.com/specimen/Courier+Prime) and [Nunito Sans](https://fonts.google.com/specimen/Nunito+Sans), from Google Fonts, both under the SIL Open Font License.
+- **Fonts:** [Courier Prime](https://fonts.google.com/specimen/Courier+Prime) and [Nunito Sans](https://fonts.google.com/specimen/Nunito+Sans), both under the SIL Open Font License. They're bundled with the app through [Fontsource](https://fontsource.org) instead of loaded from Google, so the postcard download can include them.
 - **Sample photos** in the seed data and screenshots: Cloudinary's public demo images (`res.cloudinary.com/demo`), used only as placeholders.
 - **Logo, postage stamp and favicon:** drawn for this project as SVG.
 
 ## 7. Known issues and next steps
 
 - **The capsule screen is in progress.** The vault lists capsules, but sealing and opening them from the page aren't wired up yet. Both work through the API.
-- **Download saves the photo, not the finished postcard.** Exporting the framed front and back as an image isn't built yet.
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
 - **No search, sort or month filter in the gallery yet.**
 - **"Today" is the database server's date.** Postgres decides which day it is using its own timezone setting. If the server and the user are in different timezones, a postcard made late at night can count for the wrong day. This is fine locally but needs fixing before any deployment.
