@@ -1,3 +1,10 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { api } from "../../api/client";
+import Button from "../atoms/Button";
+import PostcardFront from "../molecules/PostcardFront";
+import { formatPostcardDate } from "../../lib/dates";
+
 // =============================================================================
 // FlashbackStrip.jsx: one past postcard, from your GET /api/flashback.
 // (Wireframe page 5, box 4: "Flashback - on this day last year" + shuffle.)
@@ -8,39 +15,52 @@
 //   200 { reason: 'on-this-day' | 'random', postcard: {...} }
 //   404 { error: 'No postcards to look back on yet' }
 //
-// These hints are shorter on purpose. The fetch pattern is the same one you
-// can see in StreaksPage.jsx (the useEffect with `cancelled`).
 
-// STEP 1: imports: useEffect, useState; Link from 'react-router'; api; Button;
-//         PostcardFront (molecules); formatPostcardDate.
+export default function FlashbackStrip() {
+    const [stats, setStats] = useState({ status: 'loading', data: null, error: null })
+    const [shuffles, setShuffles] = useState(0);
 
-// STEP 2: the component (default export, no props).
+    useEffect(() => {
+        let cancelled = false
+        api('/flashback')
+            .then((data) => {
+                if (cancelled) return
+                setStats({ status: 'ready', data, error: null })
+            })
+            .catch((err) => {
+                if (cancelled) return
+                if (err.status === 404) {
+                    setStats({ status: 'none', data: null, error: null })
+                } else {
+                    setStats({ status: 'error', data: null, error: err.message })
+                }
+            })
+        return () => { cancelled = true }
+    }, [shuffles])
 
-//   2a. State: { status: 'loading' | 'ready' | 'none' | 'error', data, error }.
-//       Plus a counter, `shuffles`, that goes up by 1 each time Shuffle is
-//       pressed. Putting it in the effect's dependency list [shuffles] is
-//       what makes the effect fetch again.
+    const heading = stats.data?.reason === 'on-this-day' ? 'On this day last year' : 'A flashback';
 
-//   2b. The effect: call api('/flashback').
-//       - success         -> status 'ready', keep the data
-//       - err.status 404  -> status 'none' (NOT an error: just no older postcards)
-//       - anything else   -> status 'error', keep err.message
-//       Use the `cancelled` flag so an old response can't overwrite a newer one.
+    return (
+        <section aria-labelledby="flashback-heading" className="space-y-3 rounded-xl bg-surface p-4">
+            <h2 id="flashback-heading" className="font-semibold">{heading}</h2>
 
-//   2c. The heading depends on data.reason:
-//         'on-this-day' -> "On this day last year"
-//         'random'      -> "A flashback"
+            {stats.status === 'ready' && (
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="w-full sm:w-48">
+                        <PostcardFront imageUrl={stats.data.postcard.imageUrl} templateSlug={stats.data.postcard.templateSlug} alt={stats.data.postcard.caption || 'A past postcard'} compact />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                        <p>{stats.data.postcard.caption || 'No caption'}</p>
+                        <p className="text-small text-primary-strong">{formatPostcardDate(stats.data.postcard.date)}</p>
+                        <Link to={`/gallery/${stats.data.postcard.id}`} className="font-semibold text-primary-strong underline">Open it</Link>
+                    </div>
+                </div>
+            )}
 
-//   2d. Render a <section aria-labelledby="flashback-heading"> card with:
-//       - the heading
-//       - status 'ready': the postcard front (PostcardFront with imageUrl,
-//         templateSlug and compact), its date, its caption, and a Link to
-//         `/gallery/${…id}` so it can be opened in full
-//       - status 'none': a short "No older postcards yet" sentence
-//       - status 'error': the message
-//       - a Shuffle button (variant "ghost") that bumps the counter. Hide it
-//         for 'on-this-day'? Your call: say why in your video.
-//       On desktop the wireframe puts the photo LEFT of the text
-//       (a flex row); on a phone they stack.
+            {stats.status === 'none' && <p>No older postcards yet.</p>}
+            {stats.status === 'error' && <p role="alert">{stats.error}</p>}
 
-// STEP 3: close the component.
+            <Button variant="ghost" onClick={() => setShuffles((n) => n + 1)}>Shuffle</Button>
+        </section>
+    )
+}
