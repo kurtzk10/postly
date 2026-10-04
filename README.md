@@ -182,7 +182,7 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | GET | `/api/postcards/today` | Today's postcard | 200, or 404 if not made yet |
 | GET | `/api/postcards/:id` | One postcard | 200 · 400 if the id isn't a number · 404 |
 | POST | `/api/postcards` | Save today's postcard. Body: `{ "imageUrl", "caption", "templateId" }` | 201 · 400 invalid input · 409 today's already exists |
-| DELETE | `/api/postcards/:id` | Delete a postcard | 204 · 400 · 404 |
+| DELETE | `/api/postcards/:id` | Delete a postcard, and its photo from Cloudinary (only if it's in your own upload folder and no other postcard of yours uses it; if Cloudinary can't be reached the postcard is still deleted) | 204 · 400 · 404 |
 | GET | `/api/stats` | Streak numbers: `{ currentStreak, longestStreak, totalPostcards, firstPostcardDate }` (`firstPostcardDate` is `null` with no postcards) | 200 |
 | GET | `/api/capsules` | All capsules, soonest to unlock first. **A locked capsule's `message` is `null`**: the database only sends it from the unlock day on. | 200 |
 | POST | `/api/capsules` | Seal a capsule. Body: `{ "postcardId", "message", "unlockAt" }` | 201 · 400 (bad input, a date that isn't real or isn't in the future, or no such postcard) |
@@ -217,7 +217,7 @@ postly/
 │   │   ├── app.js              middleware and routes
 │   │   ├── config.js           reads and checks environment variables
 │   │   ├── routes/             auth.js, postcards.js, templates.js, stats.js, capsules.js, flashback.js, uploads.js
-│   │   ├── lib/                streaks.js (streak counting), validate.js (input checks), httpError.js
+│   │   ├── lib/                streaks.js (streak counting), validate.js (input checks), cloudinary.js (signing, deleting photos), httpError.js
 │   │   ├── middleware/         auth.js (requireAuth), errors.js (404 + central error handler)
 │   │   └── db/                 schema.sql, seed.sql, setup.js, resetToday.js, pool.js
 │   └── .env.example
@@ -287,5 +287,4 @@ Components follow atomic design: a level only imports from the levels below it.
 - **No password reset or email check yet.** Sign-up doesn't confirm the email address, and a forgotten password can't be recovered.
 - **Not deployed yet.** Next: move the database to Neon and host the app on Vercel.
 - **No automated tests yet.** The API has been checked by hand with curl for every status code in the table above.
-- **Deleting a postcard doesn't delete its image from Cloudinary.** Doing that needs a signed API call from the server.
-- Photos uploaded to Cloudinary before you click Save stay in your Cloudinary account even if you never save the postcard.
+- **Photos uploaded but never saved stay in Cloudinary.** If you pick a photo and then leave without clicking Save, or pick a different one, the first upload isn't cleaned up. Fixing that would need a scheduled cleanup job.

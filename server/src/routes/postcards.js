@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { HttpError } from '../lib/httpError.js';
 import { parseId, validateNewPostcard } from '../lib/validate.js';
+import { cloudinaryConfigured, destroyImage, publicIdFromUrl } from '../lib/cloudinary.js';
 
 export const postcardsRouter = Router();
 
@@ -121,10 +122,35 @@ postcardsRouter.post('/', async (req, res) => {
 });
 
 postcardsRouter.delete('/:id', async (req, res) => {
-  const { rowCount } = await pool.query('DELETE FROM postcards WHERE id = $1 AND user_id = $2', [
+  const { rows } = await pool.query('DELETE FROM postcards WHERE id = $1 AND user_id = $2 RETURNING image_url', [
     parseId(req.params.id),
     req.userId,
   ]);
-  if (rowCount === 0) throw new HttpError(404, 'Postcard not found');
+  if (!rows[0]) throw new HttpError(404, 'Postcard not found');
+
+  // The postcard is gone either way; removing its photo is a best effort.
+  await deletePhoto(rows[0].image_url, req.userId);
   res.status(204).end();
 });
+
+// Deletes a deleted postcard's photo from Cloudinary too, so it stops being
+// reachable at its address. Only ever touches photos in this user's own upload
+// folder (the API accepts any Cloudinary URL, which could point at someone
+// else's photo), and keeps a photo another of their postcards still uses.
+async function deletePhoto(imageUrl, userId) {
+  if (!cloudinaryConfigured()) return;
+  const publicId = publicIdFromUrl(imageUrl);
+  if (!publicId || !publicId.startsWith(`postly/users/${userId}/`)) return;
+
+  const { rows } = await pool.query('SELECT 1 FROM postcards WHERE user_id = $1 AND image_url = $2 LIMIT 1', [
+    userId,
+    imageUrl,
+  ]);
+  if (rows[0]) return;
+
+  try {
+    await destroyImage(publicId);
+  } catch (err) {
+    console.error(`Could not delete ${publicId} from Cloudinary:`, err.message);
+  }
+}
