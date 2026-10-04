@@ -1,6 +1,7 @@
 {
   "name": "postly",
   "private": true,
+  "type": "module",
   "description": "Daily postcard journal. Run everything from here; the app lives in server/ and client/.",
   "scripts": {
     "postinstall": "npm install --prefix server && npm install --prefix client",
