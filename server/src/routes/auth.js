@@ -21,7 +21,6 @@ import { HttpError } from '../lib/httpError.js';
 // browser a session. "Logged in" just means you've stored the user's id in
 // it: req.session.userId = user.id. requireAuth checks for exactly that.
 
-// STEP 2: export const authRouter = ___();
 export const authRouter = Router();
 
 const authLimiter = rateLimit({
@@ -106,13 +105,3 @@ authRouter.get('/me', async (req, res) => {
     if (!rows[0]) throw new HttpError(401, 'Not logged in');
     res.json(rows[0]);
 });
-
-// STEP 10: in app.js, do the two TODO (me) lines: import authRouter, and mount
-// it at '/api/auth' ABOVE `app.use('/api', requireAuth)`.
-
-// STEP 11: test it (PowerShell). -c saves the cookie, -b sends it back:
-//   curl.exe -c c.txt -X POST http://localhost:4000/api/auth/signup -H "Content-Type: application/json" -d '{\"email\":\"me@test.com\",\"password\":\"longenough\"}'
-//   curl.exe -b c.txt http://localhost:4000/api/auth/me
-//   curl.exe -b c.txt http://localhost:4000/api/postcards
-// Then say "review auth": the AI tests every status code on a throwaway database.
-
