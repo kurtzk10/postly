@@ -14,4 +14,7 @@ export const config = {
   port: Number(process.env.PORT) || 4000,
   databaseUrl: required('DATABASE_URL'),
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  // Signs the login cookie so it can't be forged. Long and random, never committed.
+  sessionSecret: required('SESSION_SECRET'),
+  isProduction: process.env.NODE_ENV === 'production',
 };

@@ -22,8 +22,10 @@ export const SELECT_POSTCARD = `
 const UNIQUE_VIOLATION = '23505';
 const FOREIGN_KEY_VIOLATION = '23503';
 
-async function findPostcard(id) {
-  const { rows } = await pool.query(`${SELECT_POSTCARD} WHERE p.id = $1`, [id]);
+// Only ever finds the logged-in user's own postcard. Someone else's id gets
+// the same 404 as an id that doesn't exist, so it can't be used to probe.
+async function findPostcard(id, userId) {
+  const { rows } = await pool.query(`${SELECT_POSTCARD} WHERE p.id = $1 AND p.user_id = $2`, [id, userId]);
   return rows[0];
 }
 
@@ -83,13 +85,16 @@ postcardsRouter.get('/', async (req, res) => {
 
 // Declared before /:id so "today" isn't read as an id.
 postcardsRouter.get('/today', async (req, res) => {
-  const { rows } = await pool.query(`${SELECT_POSTCARD} WHERE p.postcard_date = CURRENT_DATE`);
+  const { rows } = await pool.query(
+    `${SELECT_POSTCARD} WHERE p.user_id = $1 AND p.postcard_date = CURRENT_DATE`,
+    [req.userId],
+  );
   if (!rows[0]) throw new HttpError(404, "Today's postcard hasn't been made yet");
   res.json(rows[0]);
 });
 
 postcardsRouter.get('/:id', async (req, res) => {
-  const postcard = await findPostcard(parseId(req.params.id));
+  const postcard = await findPostcard(parseId(req.params.id), req.userId);
   if (!postcard) throw new HttpError(404, 'Postcard not found');
   res.json(postcard);
 });
@@ -98,12 +103,12 @@ postcardsRouter.post('/', async (req, res) => {
   const { imageUrl, caption, templateId } = validateNewPostcard(req.body);
   try {
     const { rows } = await pool.query(
-      `INSERT INTO postcards (image_url, caption, template_id)
-       VALUES ($1, $2, $3)
+      `INSERT INTO postcards (user_id, image_url, caption, template_id)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [imageUrl, caption, templateId],
+      [req.userId, imageUrl, caption, templateId],
     );
-    res.status(201).json(await findPostcard(rows[0].id));
+    res.status(201).json(await findPostcard(rows[0].id, req.userId));
   } catch (err) {
     if (err.code === UNIQUE_VIOLATION) {
       throw new HttpError(409, "Today's postcard has already been made");
@@ -116,7 +121,10 @@ postcardsRouter.post('/', async (req, res) => {
 });
 
 postcardsRouter.delete('/:id', async (req, res) => {
-  const { rowCount } = await pool.query('DELETE FROM postcards WHERE id = $1', [parseId(req.params.id)]);
+  const { rowCount } = await pool.query('DELETE FROM postcards WHERE id = $1 AND user_id = $2', [
+    parseId(req.params.id),
+    req.userId,
+  ]);
   if (rowCount === 0) throw new HttpError(404, 'Postcard not found');
   res.status(204).end();
 });
