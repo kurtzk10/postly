@@ -4,8 +4,8 @@
 --   email:    demo@postly.app
 --   password: postly-demo
 -- It's only for trying the app locally. Never seed it into a real deployment.
-INSERT INTO users (email, password_hash) VALUES
-  ('demo@postly.app', '$2b$12$o3MCLXKwSp0Vty.ExX/V9eH6JXXHrc8Y94jEocfs67yr.YF56tuOG');
+INSERT INTO users (email, password_hash, timezone) VALUES
+  ('demo@postly.app', '$2b$12$o3MCLXKwSp0Vty.ExX/V9eH6JXXHrc8Y94jEocfs67yr.YF56tuOG', 'Asia/Kuala_Lumpur');
 
 -- Postcards on past days. Today is left free so you can make one.
 INSERT INTO postcards (user_id, image_url, caption, template_id, postcard_date) VALUES

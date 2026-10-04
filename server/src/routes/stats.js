@@ -28,9 +28,8 @@ statsRouter.get('/', async (req, res) => {
     ORDER BY postcard_date ASC;
     `;
     const datesResult = await pool.query(sql, [req.userId]);
-    const todayResult = await pool.query('SELECT CURRENT_DATE as today');
     const dates = datesResult.rows.map((row) => row.postcard_date);
-    const today = todayResult.rows[0].today;
+    const today = req.today;
 
     const { currentStreak, longestStreak } = calculateStreaks(dates, today);
 

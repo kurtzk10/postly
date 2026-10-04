@@ -36,8 +36,8 @@ const SELECT_CAPSULE = `
              p.postcard_date  AS "postcardDate",
              c.unlock_at      AS "unlockAt",
              c.opened_at      AS "openedAt",
-             c.unlock_at > CURRENT_DATE AS "isLocked",
-             CASE WHEN c.unlock_at <= CURRENT_DATE THEN c.message END AS message
+             c.unlock_at > $1::date AS "isLocked",
+             CASE WHEN c.unlock_at <= $1::date THEN c.message END AS message
       FROM capsules c
       JOIN postcards p ON p.id = c.postcard_id`;
 
@@ -65,7 +65,7 @@ function validateNewCapsule(body) {
 }
 
 capsulesRouter.get('/', async (req, res) => {
-    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE p.user_id = $1 ORDER BY c.unlock_at ASC`, [req.userId]);
+    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE p.user_id = $2 ORDER BY c.unlock_at ASC`, [req.today, req.userId]);
     res.json(rows);
 });
 
@@ -75,8 +75,8 @@ capsulesRouter.post('/', async (req, res) => {
     let isFuture;
     try {
         const { rows } = await pool.query(
-            'SELECT $1::date > CURRENT_DATE AS "isFuture"',
-            [unlockAt]
+            'SELECT $1::date > $2::date AS "isFuture"',
+            [unlockAt, req.today]
         );
         isFuture = rows[0].isFuture;
     } catch (err) {
@@ -114,16 +114,16 @@ capsulesRouter.post('/', async (req, res) => {
         throw err;
     }
 
-    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE c.id = $1`, [newId]);
+    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE c.id = $2`, [req.today, newId]);
     res.status(201).json(rows[0]);
 });
 
 capsulesRouter.post('/:id/open', async (req, res) => {
     const id = parseId(req.params.id);
     const found = await pool.query(
-        `SELECT c.unlock_at > CURRENT_DATE AS "isLocked"
+        `SELECT c.unlock_at > $3::date AS "isLocked"
          FROM capsules c JOIN postcards p ON p.id = c.postcard_id
-        WHERE c.id = $1 AND p.user_id = $2`, [id, req.userId]
+        WHERE c.id = $1 AND p.user_id = $2`, [id, req.userId, req.today]
     );
 
     if (found.rows.length === 0) {
@@ -139,6 +139,6 @@ capsulesRouter.post('/:id/open', async (req, res) => {
         [id],
     );
 
-    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE c.id = $1`, [id]);
+    const { rows } = await pool.query(`${SELECT_CAPSULE} WHERE c.id = $2`, [req.today, id]);
     res.json(rows[0]);
 })

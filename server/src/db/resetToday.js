@@ -1,4 +1,5 @@
-// Deletes today's postcard so /capture can be tested again.
+// Deletes today's postcard so /capture can be tested again. "Today" is each
+// user's own today, in their timezone.
 // Usage: npm run db:reset-today
 import pg from 'pg';
 import { config } from '../config.js';
@@ -8,12 +9,16 @@ const client = new pg.Client({ connectionString: config.databaseUrl });
 try {
   await client.connect();
   const { rows } = await client.query(
-    'DELETE FROM postcards WHERE postcard_date = CURRENT_DATE RETURNING id, caption',
+    `DELETE FROM postcards p
+     USING users u
+     WHERE u.id = p.user_id AND p.postcard_date = (now() AT TIME ZONE u.timezone)::date
+     RETURNING p.id, p.caption, u.email`,
   );
   if (rows.length === 0) {
     console.log('No postcard for today. Nothing to reset.');
-  } else {
-    console.log(`Deleted today's postcard (id ${rows[0].id}: "${rows[0].caption}").`);
+  }
+  for (const row of rows) {
+    console.log(`Deleted today's postcard for ${row.email} (id ${row.id}: "${row.caption}").`);
   }
 } catch (err) {
   console.error(`Reset failed: ${err.message}`);

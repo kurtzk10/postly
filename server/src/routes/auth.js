@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { pool } from '../db/pool.js';
 import { HttpError } from '../lib/httpError.js';
+import { readTimeZone } from '../lib/timezone.js';
 
 // =============================================================================
 // auth.js: sign up, log in, log out, and "who am I?".
@@ -56,13 +57,14 @@ function validateCredentials(body) {
 
 authRouter.post('/signup', authLimiter, async (req, res) => {
     const { email, password } = validateCredentials(req.body);
+    const timeZone = (await readTimeZone(req.body.timeZone)) ?? 'UTC';
     const passwordHash = await bcrypt.hash(password, 12);
 
     let user;
     try {
         const { rows } = await pool.query(
-            'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
-            [email, passwordHash],
+            'INSERT INTO users (email, password_hash, timezone) VALUES ($1, $2, $3) RETURNING id, email',
+            [email, passwordHash, timeZone],
         );
         user = rows[0];
     } catch (err) {
@@ -85,6 +87,12 @@ authRouter.post('/login', authLimiter, async (req, res) => {
     const ok = user && (await bcrypt.compare(password, user.password_hash));
 
     if (!ok) throw new HttpError(401, 'Wrong email or password');
+
+    // Follow the user if they've moved timezone since last time.
+    const timeZone = await readTimeZone(req.body.timeZone);
+    if (timeZone) {
+        await pool.query('UPDATE users SET timezone = $1 WHERE id = $2', [timeZone, user.id]);
+    }
 
     await regenerateSession(req);
     req.session.userId = user.id;

@@ -17,6 +17,9 @@ CREATE TABLE users (
   id             SERIAL PRIMARY KEY,
   email          TEXT NOT NULL UNIQUE,
   password_hash  TEXT NOT NULL,
+  -- The user's IANA timezone, e.g. 'Asia/Kuala_Lumpur', sent by their browser.
+  -- "Today" is worked out in this zone, not the database server's.
+  timezone       TEXT NOT NULL DEFAULT 'UTC',
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -28,7 +31,8 @@ CREATE TABLE postcards (
   image_url      TEXT NOT NULL,
   caption        VARCHAR(140) NOT NULL DEFAULT '',
   template_id    INTEGER NOT NULL REFERENCES templates (id),
-  postcard_date  DATE NOT NULL DEFAULT CURRENT_DATE,
+  -- No default: the API always sets it to "today" in the user's timezone.
+  postcard_date  DATE NOT NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   -- One postcard per day PER USER: the streaks depend on it.
   UNIQUE (user_id, postcard_date)

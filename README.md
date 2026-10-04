@@ -78,7 +78,7 @@ The demo account is **`demo@postly.app`** / **`postly-demo`**. Only use it local
 
 `npm run db:setup` does the same without the sample postcards. **Both drop and recreate the tables**, so running either one again wipes your postcards.
 
-`npm run db:reset-today` deletes only today's postcard, so you can test making one again. There's one postcard allowed per day.
+`npm run db:reset-today` deletes only today's postcard (each account's own today, in its timezone), so you can test making one again. There's one postcard allowed per day.
 
 ## 3. How to run it
 
@@ -100,11 +100,41 @@ If something goes wrong:
 - `Port 4000 is already in use`: Postly is already running in another terminal. Stop that one first.
 - `Could not read package.json`: you're in the wrong folder. Run commands from the project root.
 
+## Deploying (Vercel + Neon)
+
+The live app runs on **Vercel**, with the database on **Neon** (hosted PostgreSQL). Both have free plans that are enough for Postly. Vercel serves the built React app as static files and runs the Express API as one serverless function, all on one address, so the login cookie works without any cross-site setup.
+
+How the repo is set up for it:
+- `api/index.js` hands the Express app from `server/src/app.js` to Vercel. Locally, `server/src/index.js` runs the same app as a normal server.
+- `vercel.json` installs and builds from the project root, serves `client/dist`, sends `/api/...` to the API and every other path to `index.html` (so reloading `/gallery` works), and runs the API in Singapore (`sin1`), next to the Neon database.
+
+**1. Database (Neon).** Create a project, then copy the **pooled** connection string from **Connect** (its host contains `-pooler`). Put it in a git-ignored `server/.env.neon` as `DATABASE_URL=...` and create the tables once:
+
+```bash
+# PowerShell, from server/
+$env:DATABASE_URL = (Get-Content .env.neon | Select-String '^DATABASE_URL=').Line.Substring(13); node src/db/setup.js; Remove-Item Env:DATABASE_URL
+```
+
+Use `db:setup`, not `db:seed`: the deployed database gets no demo account.
+
+**2. App (Vercel).** Import the GitHub repo as a new project (root directory `./`; `vercel.json` does the rest) and add these environment variables before the first deploy:
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | Neon's pooled connection string, with `sslmode=verify-full` |
+| `SESSION_SECRET` | a new long random string, different from your local one |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | from the Cloudinary console |
+| `NODE_ENV` | `production` (makes the login cookie https-only) |
+
+Leave `VITE_API_URL` unset: the app and API share one address. Every push to `main` then redeploys.
+
 ## 4. Features and usage
 
 ### Accounts (`/login`, `/signup`)
 
 Anyone can sign up with an email and a password (8 to 72 characters). Each account only ever sees its own postcards, streaks and capsules. You stay logged in for 30 days, or until you click **Log out** in the header. Any journal page you open while logged out sends you to **Log in** first, then back to where you were.
+
+**"Today" is your today.** When you sign up or log in, the browser sends its timezone (e.g. `Asia/Kuala_Lumpur`) and the server saves it on your account. Every "which day is it?" question (today's postcard, streaks, capsule unlock dates, the flashback) is answered in that timezone, not the server's, so a postcard made at 2 a.m. counts for the right day wherever you are. The server still decides the date, so changing your computer's clock can't fill in a missed day.
 
 How it's kept safe:
 - Passwords are stored only as bcrypt hashes.
@@ -172,8 +202,8 @@ All responses are JSON. Errors look like `{ "error": "message" }`.
 | Method | Path | What it does | Responses |
 | --- | --- | --- | --- |
 | GET | `/api/health` | Server is up | 200 |
-| POST | `/api/auth/signup` | Create an account and log in. Body: `{ "email", "password" }` | 201 · 400 invalid input · 409 email already used · 429 too many tries |
-| POST | `/api/auth/login` | Log in. Body: `{ "email", "password" }` | 200 · 400 · 401 wrong email or password · 429 |
+| POST | `/api/auth/signup` | Create an account and log in. Body: `{ "email", "password", "timeZone" }` (`timeZone` is optional, e.g. `Asia/Kuala_Lumpur`; `UTC` if left out) | 201 · 400 invalid input or unknown timezone · 409 email already used · 429 too many tries |
+| POST | `/api/auth/login` | Log in. Body: `{ "email", "password", "timeZone" }` (optional; updates your saved timezone) | 200 · 400 · 401 wrong email or password · 429 |
 | POST | `/api/auth/logout` | Log out | 204 |
 | GET | `/api/auth/me` | Who is logged in: `{ "id", "email" }` | 200 · 401 |
 | POST | `/api/uploads/signature` | A signature for one photo upload to Cloudinary | 200 · 503 Cloudinary not set up on the server |
@@ -211,6 +241,8 @@ curl -b cookies.txt -X POST http://localhost:4000/api/postcards \
 postly/
 ├── CLAUDE.md                   my rules for the AI assistant
 ├── package.json                root scripts: npm install / npm run dev / db:* run both halves
+├── vercel.json                 how Vercel builds and routes the deployed app
+├── api/index.js                Vercel's entry point: hands it the Express app
 ├── server/                     Express API
 │   ├── src/
 │   │   ├── index.js            starts the server (checks the DB connection first)
@@ -282,7 +314,7 @@ Components follow atomic design: a level only imports from the levels below it.
 ## 7. Known issues and next steps
 
 - **The live camera needs `localhost` or `https`.** If you open the dev server from your phone over Wi-Fi (`http://192.168...`), the browser blocks the live viewfinder, so **Take a photo** opens the phone's camera app instead.
-- **"Today" is the database server's date.** Postgres decides which day it is using its own timezone setting. If the server and the user are in different timezones, a postcard made late at night can count for the wrong day. This is fine locally but needs fixing before any deployment.
+- **Your timezone updates when you log in, not while you're logged in.** If you travel, log out and back in so "today" follows you.
 - **Re-running `db:setup` or `db:seed` deletes everything.** There are no migrations yet.
 - **No password reset or email check yet.** Sign-up doesn't confirm the email address, and a forgotten password can't be recovered.
 - **Not deployed yet.** Next: move the database to Neon and host the app on Vercel.

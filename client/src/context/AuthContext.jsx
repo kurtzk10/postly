@@ -2,6 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 import { AuthContext } from './auth.js'
 
+// The browser's timezone, e.g. 'Asia/Kuala_Lumpur'. The server uses it to
+// decide which day "today" is for this user.
+function browserTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
 // Who is logged in. On first load it asks the server (/auth/me), because the
 // session lives in an httpOnly cookie the page itself can't read.
 export function AuthProvider({ children }) {
@@ -38,13 +44,13 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = useCallback(async (email, password) => {
-    const me = await api('/auth/login', { method: 'POST', body: { email, password } })
+    const me = await api('/auth/login', { method: 'POST', body: { email, password, timeZone: browserTimeZone() } })
     setUser(me)
     setStatus('in')
   }, [])
 
   const signup = useCallback(async (email, password) => {
-    const me = await api('/auth/signup', { method: 'POST', body: { email, password } })
+    const me = await api('/auth/signup', { method: 'POST', body: { email, password, timeZone: browserTimeZone() } })
     setUser(me)
     setStatus('in')
   }, [])

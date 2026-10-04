@@ -87,8 +87,8 @@ postcardsRouter.get('/', async (req, res) => {
 // Declared before /:id so "today" isn't read as an id.
 postcardsRouter.get('/today', async (req, res) => {
   const { rows } = await pool.query(
-    `${SELECT_POSTCARD} WHERE p.user_id = $1 AND p.postcard_date = CURRENT_DATE`,
-    [req.userId],
+    `${SELECT_POSTCARD} WHERE p.user_id = $1 AND p.postcard_date = $2`,
+    [req.userId, req.today],
   );
   if (!rows[0]) throw new HttpError(404, "Today's postcard hasn't been made yet");
   res.json(rows[0]);
@@ -104,10 +104,10 @@ postcardsRouter.post('/', async (req, res) => {
   const { imageUrl, caption, templateId } = validateNewPostcard(req.body);
   try {
     const { rows } = await pool.query(
-      `INSERT INTO postcards (user_id, image_url, caption, template_id)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO postcards (user_id, image_url, caption, template_id, postcard_date)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [req.userId, imageUrl, caption, templateId],
+      [req.userId, imageUrl, caption, templateId, req.today],
     );
     res.status(201).json(await findPostcard(rows[0].id, req.userId));
   } catch (err) {
