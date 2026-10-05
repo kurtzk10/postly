@@ -2,7 +2,7 @@
 
 ![Built with AI: Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-D4A373)
 
-Built with help from **Claude Code (Anthropic)**. See [AI-USAGE.md](AI-USAGE.md) for what the AI wrote and what I wrote, and [CLAUDE.md](CLAUDE.md) for the rules I set for it.
+Built with help from **Claude Code (Anthropic)**, which wrote most of the code: about **78%** of the application code lines, against my **22%** (streaks, stats, time capsules, gallery search, the login routes and the `/capsule` screen). The idea, the design and every decision are mine. See [AI-USAGE.md](AI-USAGE.md) for what the AI wrote and what I wrote, and [CLAUDE.md](CLAUDE.md) for the rules I set for it.
 
 ## 1. Overview
 
